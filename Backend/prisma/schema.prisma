@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Tabel User
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String
+  password     String       
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[] 
+}
+
+// Tabel Transaksi Keuangan
+model Transaction {
+  id          String          @id @default(uuid())
+  userId      String
+  type        TransactionType 
+  amount      Float           
+  category    String          
+  description String?        
+  date        DateTime        
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relasi ke tabel User
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Definisi tipe transaksi khusus PostgreSQL
+enum TransactionType {
+  INCOME  // Pemasukan
+  EXPENSE // Pengeluaran
+}
