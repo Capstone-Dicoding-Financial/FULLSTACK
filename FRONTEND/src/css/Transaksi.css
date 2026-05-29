@@ -1,0 +1,427 @@
+/* ── Transaksi.css ─────────────────────────────────────────── */
+
+/* Page wrapper */
+.transaksi-page {
+  padding: 24px;
+  background-color: #f0f2f7;
+  min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.transaksi-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.transaksi-header__title {
+  font-size: 22px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+}
+
+.transaksi-header__sub {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 4px 0 0;
+}
+
+.transaksi-header__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-outline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  background: #ffffff;
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-outline:hover { background: #f9fafb; }
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #2d6ef7;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: #1d5de8; }
+
+/* ── Stat Cards ─────────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 0.5px solid #f3f4f6;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.stat-card__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.stat-card__value {
+  font-size: 20px;
+  font-weight: 500;
+  color: #111827;
+}
+.stat-card__value--green { color: #16a34a; }
+.stat-card__value--red   { color: #ef4444; }
+
+.stat-card__sub {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* ── Table Card ─────────────────────────────────────────────── */
+.table-card {
+  background: #ffffff;
+  border: 0.5px solid #f3f4f6;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 0.5px solid #f3f4f6;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.table-card__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.table-card__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Search */
+.search-wrap {
+  position: relative;
+}
+
+.search-wrap__icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.search-input {
+  padding: 7px 12px 7px 30px;
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  width: 180px;
+  color: #111827;
+  outline: none;
+  transition: box-shadow 0.15s;
+}
+.search-input:focus { box-shadow: 0 0 0 3px rgba(45, 110, 247, 0.15); }
+
+.filter-select {
+  padding: 7px 10px;
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #374151;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+}
+.filter-select:focus { box-shadow: 0 0 0 3px rgba(45, 110, 247, 0.15); }
+
+/* Table */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+}
+
+.data-table thead tr {
+  background: #f9fafb;
+}
+
+.data-table th {
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  text-align: left;
+}
+
+.data-table th:last-child { text-align: center; }
+.data-table th.align-right { text-align: right; }
+
+.data-table td {
+  padding: 12px 20px;
+  font-size: 13px;
+  color: #111827;
+  border-top: 0.5px solid #f3f4f6;
+}
+
+.data-table tbody tr:hover { background: #f9fafb; }
+
+.data-table td.align-right { text-align: right; }
+.data-table td.align-center { text-align: center; }
+
+/* Badges */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+.badge--in  { background: #f0fdf4; color: #15803d; }
+.badge--out { background: #fef2f2; color: #b91c1c; }
+
+.cat-tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Amount colors */
+.amount--in  { color: #16a34a; font-weight: 500; }
+.amount--out { color: #ef4444; font-weight: 500; }
+
+/* Action buttons */
+.action-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+.action-btn--edit:hover   { color: #2d6ef7; }
+.action-btn--delete:hover { color: #ef4444; }
+
+/* Empty state */
+.table-empty {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* Table footer */
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-top: 0.5px solid #f3f4f6;
+}
+
+.table-footer__text {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* ── Modal ──────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 16px;
+}
+
+.modal-box {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  max-width: 440px;
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-header__title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.modal-close:hover { color: #374151; }
+
+/* Jenis Toggle */
+.jenis-toggle {
+  display: flex;
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.jenis-toggle__btn {
+  flex: 1;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  background: #ffffff;
+  color: #9ca3af;
+}
+.jenis-toggle__btn--active {
+  background: #2d6ef7;
+  color: #ffffff;
+}
+
+/* Form Grid */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #111827;
+  outline: none;
+  transition: box-shadow 0.15s;
+  font-family: inherit;
+  background: #ffffff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  box-shadow: 0 0 0 3px rgba(45, 110, 247, 0.15);
+}
+
+.form-group textarea {
+  resize: none;
+  height: 72px;
+  line-height: 1.5;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.modal-footer .btn-cancel {
+  flex: 1;
+  padding: 9px;
+  font-size: 13px;
+  background: #ffffff;
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.modal-footer .btn-cancel:hover { background: #f9fafb; }
+
+.modal-footer .btn-save {
+  flex: 1;
+  padding: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #2d6ef7;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.modal-footer .btn-save:hover { background: #1d5de8; }
