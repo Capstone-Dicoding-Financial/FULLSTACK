@@ -16,9 +16,9 @@ export const register = async (req, res) => {
     const user = await prisma.user.create({
       data: { name, email, password: hashedPassword },
     });
-    res.status(201).json({ message: "User berhasil dibuat!" });
+    return res.status(201).json({ message: "User berhasil dibuat!" });
   } catch (error) {
-    res.status(400).json({ error: "Email sudah terdaftar!" });
+    return res.status(400).json({ error: "Email sudah terdaftar!" });
   }
 };
 
@@ -27,18 +27,28 @@ export const login = async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
+
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: "Email atau Password salah!" });
     }
 
     const token = jwt.sign(
-      { userId: user.id }, 
+      { userId: user.id },  
       process.env.JWT_SECRET, 
       { expiresIn: '1h' }
     );
 
-    res.json({ token });
+    return res.status(200).json({
+      message: "Login berhasil!",
+      token,
+      user: {
+        id: user.id,      
+        email: user.email,
+        name: user.name
+      }
+    });
+
   } catch (error) {
-    res.status(500).json({ error: "Terjadi kesalahan pada server" });
+    return res.status(500).json({ error: "Terjadi kesalahan pada server" });
   }
 };
