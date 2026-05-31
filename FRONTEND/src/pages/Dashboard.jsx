@@ -1,37 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../css/dashboard.css";
 
-// Mini sparkline chart (SVG)
 function SparklineChart() {
   const points = [
-    { x: 0, y: 80 },
-    { x: 40, y: 65 },
-    { x: 80, y: 72 },
-    { x: 120, y: 50 },
-    { x: 160, y: 60 },
-    { x: 200, y: 40 },
-    { x: 240, y: 55 },
-    { x: 280, y: 35 },
-    { x: 320, y: 45 },
-    { x: 360, y: 30 },
-    { x: 380, y: 38 },
+    { x: 0, y: 80 }, { x: 40, y: 65 }, { x: 80, y: 72 }, { x: 120, y: 50 },
+    { x: 160, y: 60 }, { x: 200, y: 40 }, { x: 240, y: 55 }, { x: 280, y: 35 },
+    { x: 320, y: 45 }, { x: 360, y: 30 }, { x: 380, y: 38 },
   ];
 
   const projected = [
-    { x: 380, y: 38 },
-    { x: 420, y: 28 },
-    { x: 460, y: 20 },
-    { x: 500, y: 25 },
-    { x: 540, y: 15 },
-    { x: 580, y: 18 },
-    { x: 620, y: 10 },
+    { x: 380, y: 38 }, { x: 420, y: 28 }, { x: 460, y: 20 }, { x: 500, y: 25 },
+    { x: 540, y: 15 }, { x: 580, y: 18 }, { x: 620, y: 10 },
   ];
 
-  const toPath = (pts) =>
-    pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-
-  const toArea = (pts) =>
-    `${toPath(pts)} L ${pts[pts.length - 1].x} 100 L ${pts[0].x} 100 Z`;
+  const toPath = (pts) => pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  const toArea = (pts) => `${toPath(pts)} L ${pts[pts.length - 1].x} 100 L ${pts[0].x} 100 Z`;
 
   return (
     <div className="chart-container">
@@ -47,58 +30,73 @@ function SparklineChart() {
             <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.01" />
           </linearGradient>
         </defs>
-        {/* Area fill - actual */}
         <path d={toArea(points)} fill="url(#areaGrad)" />
-        {/* Area fill - projected */}
         <path d={toArea(projected)} fill="url(#projGrad)" />
-        {/* Line - actual */}
         <path d={toPath(points)} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
-        {/* Line - projected (dashed) */}
         <path d={toPath(projected)} fill="none" stroke="#93c5fd" strokeWidth="2" strokeDasharray="6 4" strokeLinecap="round" />
-        {/* Today dot */}
         <circle cx="380" cy="38" r="5" fill="#ffffff" stroke="#2563eb" strokeWidth="2.5" />
       </svg>
     </div>
   );
 }
 
-const transaksi = [
-  {
-    id: 1,
-    icon: "🏪",
-    keterangan: "Penjualan Toko (Cash)",
-    tanggal: "Hari ini, 14:30",
-    status: "Sukses",
-    statusClass: "status-sukses",
-    nominal: "+ Rp 1.250.000",
-    nominalClass: "nominal-plus",
-  },
-  {
-    id: 2,
-    icon: "🛒",
-    keterangan: "Belanja Bahan Baku",
-    tanggal: "Kemarin, 09:15",
-    status: "Lunas",
-    statusClass: "status-lunas",
-    nominal: "- Rp 3.400.000",
-    nominalClass: "nominal-minus",
-  },
-  {
-    id: 3,
-    icon: "⚡",
-    keterangan: "Tagihan Listrik & Air",
-    tanggal: "12 Okt 2023",
-    status: "Menunggu",
-    statusClass: "status-menunggu",
-    nominal: "- Rp 850.000",
-    nominalClass: "nominal-minus",
-  },
-];
-
 export default function Dashboard() {
+  const [summary, setSummary] = useState({ totalIncome: 0, totalExpense: 0, balance: 0 });
+  const [transaksiList, setTransaksiList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const formatRupiah = (angka) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(angka);
+  };
+
+  const formatTanggal = (stringTanggal) => {
+    const opsi = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(stringTanggal).toLocaleDateString('id-ID', opsi);
+  };
+
+  useEffect(() => {
+    const fetchDataDashboard = async () => {
+      try {
+        const token = localStorage.getItem("token"); 
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, 
+        };
+
+        const [resSummary, resTrx] = await Promise.all([
+          fetch("http://localhost:5000/api/transactions/summary", { headers }),
+          fetch("http://localhost:5000/api/transactions", { headers }),
+        ]);
+
+        if (!resSummary.ok || !resTrx.ok) {
+          throw new Error("Gagal mengambil data dari server");
+        }
+
+        const dataSummary = await resSummary.json();
+        const dataTrx = await resTrx.json();
+
+        if (dataSummary.success) setSummary(dataSummary.data);
+        if (dataTrx.transactions) setTransaksiList(dataTrx.transactions.slice(0, 3));
+        
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchDataDashboard();
+  }, []);
+
+  if (loading) return <div className="loading-state">Memuat data dashboard...</div>;
+  if (error) return <div className="error-state">Error: {error}</div>;
+
   return (
     <div className="dashboard-page">
-      {/* Top Bar */}
       <div className="dashboard-topbar">
         <div>
           <h1 className="dashboard-title">Dashboard</h1>
@@ -114,9 +112,7 @@ export default function Dashboard() {
       </div>
 
       <div className="dashboard-body">
-        {/* LEFT COLUMN */}
         <div className="dashboard-left">
-          {/* Summary Cards */}
           <div className="summary-cards">
             <div className="card card-kas">
               <div className="card-header">
@@ -128,13 +124,13 @@ export default function Dashboard() {
                   </svg>
                 </span>
               </div>
-              <div className="card-amount">Rp 45.230.000</div>
-              <div className="card-trend trend-up">↗ +12.5% vs bulan lalu</div>
+              <div className="card-amount">{formatRupiah(summary.balance)}</div>
+              <div className="card-trend trend-up">↗ Update otomatis</div>
             </div>
 
             <div className="card card-pemasukan">
               <div className="card-header">
-                <span className="card-label">Pemasukan Bulan Ini</span>
+                <span className="card-label">Total Pemasukan</span>
                 <span className="card-icon card-icon-green">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="12" y1="19" x2="12" y2="5" />
@@ -142,13 +138,13 @@ export default function Dashboard() {
                   </svg>
                 </span>
               </div>
-              <div className="card-amount">Rp 128.500.000</div>
-              <div className="card-trend trend-up">↗ +8.2% target tercapai</div>
+              <div className="card-amount">{formatRupiah(summary.totalIncome)}</div>
+              <div className="card-trend trend-up">↗ Berhasil dirangkum</div>
             </div>
 
             <div className="card card-pengeluaran">
               <div className="card-header">
-                <span className="card-label">Pengeluaran Bulan Ini</span>
+                <span className="card-label">Total Pengeluaran</span>
                 <span className="card-icon card-icon-red">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="12" y1="5" x2="12" y2="19" />
@@ -156,18 +152,15 @@ export default function Dashboard() {
                   </svg>
                 </span>
               </div>
-              <div className="card-amount">Rp 83.270.000</div>
-              <div className="card-trend trend-down">↘ -2.1% dari batas aman</div>
+              <div className="card-amount">{formatRupiah(summary.totalExpense)}</div>
+              <div className="card-trend trend-down">↘ Batas pengeluaran aman</div>
             </div>
           </div>
 
-          {/* Chart */}
           <div className="chart-card">
             <div className="chart-card-header">
               <div>
-                <h2 className="chart-title">
-                  <span className="chart-title-icon">✦</span> Prediksi Arus Kas (AI)
-                </h2>
+                <h2 className="chart-title">Prediksi Arus Kas (AI)</h2>
                 <p className="chart-desc">Proyeksi 30 hari ke depan berdasarkan tren historis.</p>
               </div>
               <span className="chart-badge">30 Hari</span>
@@ -175,7 +168,6 @@ export default function Dashboard() {
             <SparklineChart />
           </div>
 
-          {/* Transaksi Terakhir */}
           <div className="transaksi-card">
             <div className="transaksi-header">
               <h2 className="section-title">Transaksi Terakhir</h2>
@@ -191,29 +183,35 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {transaksi.map((t) => (
-                  <tr key={t.id}>
-                    <td>
-                      <span className="trx-icon">{t.icon}</span>
-                      {t.keterangan}
-                    </td>
-                    <td className="trx-tanggal">{t.tanggal}</td>
-                    <td>
-                      <span className={`trx-status ${t.statusClass}`}>{t.status}</span>
-                    </td>
-                    <td className={`trx-nominal ${t.nominalClass}`}>{t.nominal}</td>
+                {transaksiList.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>Belum ada data transaksi.</td>
                   </tr>
-                ))}
+                ) : (
+                  transaksiList.map((t) => (
+                    <tr key={t.id}>
+                      <td>
+                        <span className="trx-icon">{t.type === "INCOME" ? "🏪" : "🛒"}</span>
+                        {t.category} {t.description ? `- ${t.description}` : ""}
+                      </td>
+                      <td className="trx-tanggal">{formatTanggal(t.date)}</td>
+                      <td>
+                        <span className="trx-status status-sukses">Sukses</span>
+                      </td>
+                      <td className={`trx-nominal ${t.type === "INCOME" ? "nominal-plus" : "nominal-minus"}`}>
+                        {t.type === "INCOME" ? "+ " : "- "} {formatRupiah(t.amount)}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* RIGHT COLUMN - AI Insights */}
         <div className="dashboard-right">
           <div className="insights-card">
             <div className="insights-header">
-              <span className="insights-icon">🤖</span>
               <h2 className="insights-title">Insights Cerdas</h2>
             </div>
             <p className="insights-desc">
