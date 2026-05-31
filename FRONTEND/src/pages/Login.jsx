@@ -42,45 +42,64 @@ const EyeOffIcon = () => (
   </svg>
 );
 
-const SparkIcon = () => (
-  <svg width={32} height={32} fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={1.5}>
-    <path d="M12 2 9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z"/>
-    <path d="M5 5l1.5 1.5M18.5 5 17 6.5M5 19l1.5-1.5M17 17.5l1.5 1.5" strokeLinecap="round"/>
-  </svg>
-);
-
 export default function Login() {
   const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // sementara langsung masuk dashboard
-    setTimeout(() => {
-      setLoading(false);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Email atau password salah.");
+      }
+
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userId", data.user.id);
+      } else {
+        throw new Error("Token tidak ditemukan dari respon server.");
+      }
+
       navigate("/dashboard");
-    }, 1000);
+    } catch (err) {
+      setError(err.message); 
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="login-page">
-      {/* ── LEFT PANEL ── */}
       <div className="login-left">
-        {/* decorative blobs */}
         <div className="blob blob-1" />
         <div className="blob blob-2" />
         <div className="blob blob-3" />
 
         <div className="login-left__content">
-          
           <h2 className="login-left__title">
             Kelola Keuangan<br />UMKM Lebih Mudah
           </h2>
@@ -102,7 +121,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* background image overlay */}
         <img
           src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=900&auto=format&fit=crop"
           alt=""
@@ -110,12 +128,8 @@ export default function Login() {
         />
       </div>
 
-      {/* ── RIGHT PANEL ── */}
       <div className="login-right">
         <div className="login-form-wrap">
-
-
-          {/* Logo */}
           <div className="login-logo">
             <BankIcon />
             <span className="login-logo__text">DanaUMKM</span>
@@ -124,8 +138,24 @@ export default function Login() {
           <h1 className="login-title">Selamat Datang Kembali</h1>
           <p className="login-subtitle">Silakan masuk ke akun Anda untuk melanjutkan.</p>
 
+          {error && (
+            <div className="login-error-badge" style={{
+              backgroundColor: "#fee2e2",
+              color: "#dc2626",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              marginBottom: "16px",
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              border: "1px solid #fca5a5"
+            }}>
+              <span>⚠️</span> {error}
+            </div>
+          )}
+
           <form className="login-form" onSubmit={handleSubmit}>
-            {/* Email */}
             <div className="form-group">
               <label className="form-label">Email</label>
               <div className="input-wrap">
@@ -142,7 +172,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Password */}
             <div className="form-group">
               <label className="form-label">Password</label>
               <div className="input-wrap">
@@ -167,7 +196,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Remember + Forgot */}
             <div className="form-row">
               <label className="checkbox-label">
                 <input
@@ -182,11 +210,8 @@ export default function Login() {
               <a href="#" className="forgot-link">Lupa Password?</a>
             </div>
 
-            {/* Submit */}
             <button type="submit" className={`btn-login${loading ? " btn-login--loading" : ""}`} disabled={loading}>
-              {loading ? (
-                <span className="btn-spinner" />
-              ) : "Masuk"}
+              {loading ? "Memproses..." : "Masuk"}
             </button>
           </form>
 

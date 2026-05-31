@@ -27,20 +27,43 @@ export const getTransactionSummary = async (req, res) => {
 };
 
 export const addTransaction = async (req, res) => {
-  const { type, amount, category, description, date } = req.body;
-  const userId = req.user.id;
-
-  if (!type || !amount || !category || !date) {
-    return res.status(400).json({ error: "Semua field harus diisi!" });
-  }
-
   try {
+
+    console.log("Data masuk dari Frontend:", req.body);
+
+    const { type, amount, category, description, date } = req.body;
+
+    const userId = req.user?.userId || req.user?.id;
+    
+    if (!userId) {
+      console.log("userId tidak ditemukan di token JWT");
+      return res.status(401).json({ error: "Sesi login tidak valid. Silakan login ulang." });
+    }
+
+    if (!type || !amount || !category || !date) {
+      console.log("Ada field yang kosong");
+      return res.status(400).json({ error: "Semua field wajib harus diisi!" });
+    }
+
     const transaction = await prisma.transaction.create({
-      data: { userId, type, amount, category, description, date: new Date(date) }
+      data: { 
+        userId: userId, 
+        type: type, 
+        amount: Number(amount), 
+        category: category, 
+        description: description || "", 
+        date: new Date(date) 
+      }
     });
+
+    console.log("Sukses simpan ke DB :", transaction);
     return res.status(201).json({ message: "Transaksi berhasil ditambahkan!", transaction });
+
   } catch (error) {
-    return res.status(400).json({ error: "Gagal menambah transaksi" });
+
+    console.error("ERROR PRISMA / SERVER:", error);
+ 
+    return res.status(400).json({ error: `Gagal menambah transaksi: ${error.message}` });
   }
 };
 

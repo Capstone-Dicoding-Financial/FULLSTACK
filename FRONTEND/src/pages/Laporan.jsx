@@ -1,112 +1,194 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import "../css/Laporan.css";
 
-// ── Bar Chart SVG (pemasukan vs pengeluaran bulanan) ───────────────────────
-function BarChart() {
-  const data = [
-    { bulan: "Mei", masuk: 95, keluar: 70 },
-    { bulan: "Jun", masuk: 110, keluar: 80 },
-    { bulan: "Jul", masuk: 88, keluar: 65 },
-    { bulan: "Ags", masuk: 102, keluar: 75 },
-    { bulan: "Sep", masuk: 118, keluar: 82 },
-    { bulan: "Okt", masuk: 128, keluar: 83 },
-  ];
+// ── Helpers format angka sumbu Y ──────────────────────────────────────────────
+function fmtAxis(val) {
+  const abs = Math.abs(val);
+  const sign = val < 0 ? "-" : "";
+  if (abs >= 1_000_000_000) return `${sign}${(abs / 1_000_000_000).toFixed(1)}M`;
+  if (abs >= 1_000_000)     return `${sign}${(abs / 1_000_000).toFixed(0)}jt`;
+  if (abs >= 1_000)         return `${sign}${(abs / 1_000).toFixed(0)}rb`;
+  return `${sign}${abs}`;
+}
 
-  const maxVal = 140;
-  const chartH = 120;
-  const barW = 18;
-  const gap = 8;
-  const groupW = barW * 2 + gap;
-  const groupGap = 28;
-  const totalW = data.length * (groupW + groupGap) - groupGap;
+// ── BarChart dengan label sumbu Y ─────────────────────────────────────────────
+function BarChart({ data, maxVal }) {
+  const LABEL_W = 36;   // lebar area label Y
+  const chartH  = 120;
+  const barW    = 16;
+  const gap     = 6;
+  const groupW  = barW * 2 + gap;
+  const groupGap = 24;
+  const barsW   = data.length * (groupW + groupGap) - groupGap;
+  const totalW  = LABEL_W + barsW + 8;
+  const safeMax = maxVal || 1;
+
+  // 4 garis grid: 25%, 50%, 75%, 100%
+  const ticks = [1, 0.75, 0.5, 0.25, 0];
 
   return (
     <div className="barchart-wrap">
-      <svg viewBox={`0 0 ${totalW + 20} ${chartH + 30}`}
-        preserveAspectRatio="xMidYMid meet" className="barchart-svg">
-        {/* Grid */}
-        {[0, 0.25, 0.5, 0.75, 1].map((t) => {
-          const y = t * chartH;
+      <svg
+        viewBox={`0 0 ${totalW} ${chartH + 30}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="barchart-svg"
+      >
+        {/* Grid + label Y */}
+        {ticks.map((t) => {
+          const y   = t === 0 ? 0 : (1 - t) * chartH;
+          const val = Math.round(safeMax * t);
           return (
-            <line key={t} x1="0" y1={y} x2={totalW + 20} y2={y}
-              stroke="#f1f5f9" strokeWidth="1" />
+            <g key={t}>
+              <line
+                x1={LABEL_W} y1={y}
+                x2={totalW}  y2={y}
+                stroke="#f1f5f9" strokeWidth="1"
+              />
+              <text
+                x={LABEL_W - 4} y={y + 4}
+                textAnchor="end"
+                fontSize="9"
+                fill="#94a3b8"
+                fontFamily="Plus Jakarta Sans, sans-serif"
+              >
+                {fmtAxis(val)}
+              </text>
+            </g>
           );
         })}
+
+        {/* Batang */}
         {data.map((d, i) => {
-          const x = i * (groupW + groupGap) + 10;
-          const hMasuk = (d.masuk / maxVal) * chartH;
-          const hKeluar = (d.keluar / maxVal) * chartH;
+          const x      = LABEL_W + i * (groupW + groupGap);
+          const hMasuk  = (d.masuk  / safeMax) * chartH;
+          const hKeluar = (d.keluar / safeMax) * chartH;
           return (
             <g key={d.bulan}>
-              {/* Pemasukan */}
-              <rect x={x} y={chartH - hMasuk} width={barW} height={hMasuk}
-                rx="4" fill="#2563eb" opacity="0.85" />
-              {/* Pengeluaran */}
-              <rect x={x + barW + gap} y={chartH - hKeluar}
-                width={barW} height={hKeluar} rx="4" fill="#ef4444" opacity="0.75" />
-              {/* Label bulan */}
-              <text x={x + barW + gap / 2} y={chartH + 16}
-                textAnchor="middle" fontSize="10" fill="#94a3b8"
-                fontFamily="Plus Jakarta Sans, sans-serif">
+              <rect
+                x={x} y={chartH - hMasuk}
+                width={barW} height={hMasuk}
+                rx="4" fill="#2563eb" opacity="0.85"
+              />
+              <rect
+                x={x + barW + gap} y={chartH - hKeluar}
+                width={barW} height={hKeluar}
+                rx="4" fill="#ef4444" opacity="0.75"
+              />
+              <text
+                x={x + barW + gap / 2} y={chartH + 16}
+                textAnchor="middle" fontSize="10"
+                fill="#94a3b8"
+                fontFamily="Plus Jakarta Sans, sans-serif"
+              >
                 {d.bulan}
               </text>
             </g>
           );
         })}
       </svg>
+
       <div className="barchart-legend">
         <span className="bcleg-item">
-          <span className="bcleg-dot" style={{ background: "#2563eb" }} />
-          Pemasukan
+          <span className="bcleg-dot" style={{ background: "#2563eb" }} />Pemasukan
         </span>
         <span className="bcleg-item">
-          <span className="bcleg-dot" style={{ background: "#ef4444" }} />
-          Pengeluaran
+          <span className="bcleg-dot" style={{ background: "#ef4444" }} />Pengeluaran
         </span>
       </div>
     </div>
   );
 }
 
-// ── Line Chart SVG (tren laba bersih) ─────────────────────────────────────
-function LineChart() {
-  const data = [22, 28, 20, 25, 34, 42];
-  const labels = ["Mei", "Jun", "Jul", "Ags", "Sep", "Okt"];
-  const maxV = 50;
-  const W = 320;
-  const H = 90;
+// ── LineChart dengan label sumbu Y ────────────────────────────────────────────
+function LineChart({ dataPoints, labels, maxVal, minVal }) {
+  const LABEL_W = 44;
+  const PAD_T   = 12;
+  const PAD_B   = 28;
+  const PAD_R   = 12;
+  const W       = 520;
+  const H       = 140;
+  const plotW   = W - LABEL_W - PAD_R;
+  const plotH   = H;
+  const totalH  = PAD_T + H + PAD_B;
+  const range   = (maxVal - minVal) || 1;
 
-  const pts = data.map((v, i) => ({
-    x: (i / (data.length - 1)) * W,
-    y: H - (v / maxV) * H,
-  }));
+  const ticks = [maxVal, minVal + range * 0.66, minVal + range * 0.33, minVal];
 
+  const scaleY = (v) => PAD_T + plotH - ((v - minVal) / range) * plotH;
+  const scaleX = (i) =>
+    LABEL_W + (dataPoints.length > 1 ? (i / (dataPoints.length - 1)) * plotW : plotW / 2);
+
+  const pts  = dataPoints.map((v, i) => ({ x: scaleX(i), y: scaleY(v) }));
   const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const area = `${path} L${W},${H} L0,${H} Z`;
+  const areaBottom = PAD_T + plotH;
+  const area = pts.length > 0
+    ? `${path} L${scaleX(dataPoints.length - 1).toFixed(1)},${areaBottom} L${scaleX(0).toFixed(1)},${areaBottom} Z`
+    : "";
 
   return (
     <div className="linechart-wrap">
-      <svg viewBox={`0 0 ${W} ${H + 24}`} preserveAspectRatio="none" className="linechart-svg">
+      <svg
+        viewBox={`0 0 ${W} ${totalH}`}
+        preserveAspectRatio="xMidYMid meet"
+        className="linechart-svg"
+        style={{ width: "100%", height: "auto" }}
+      >
         <defs>
           <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
+            <stop offset="0%"   stopColor="#22c55e" stopOpacity="0.18" />
             <stop offset="100%" stopColor="#22c55e" stopOpacity="0.01" />
           </linearGradient>
         </defs>
-        {[0.25, 0.5, 0.75].map((t) => (
-          <line key={t} x1="0" y1={t * H} x2={W} y2={t * H}
-            stroke="#f1f5f9" strokeWidth="1" />
-        ))}
-        <path d={area} fill="url(#lineGrad)" />
-        <path d={path} fill="none" stroke="#22c55e"
-          strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Grid + label Y */}
+        {ticks.map((val, idx) => {
+          const y = scaleY(val);
+          return (
+            <g key={idx}>
+              <line
+                x1={LABEL_W}   y1={y.toFixed(1)}
+                x2={W - PAD_R} y2={y.toFixed(1)}
+                stroke="#f1f5f9" strokeWidth="1"
+              />
+              <text
+                x={LABEL_W - 6}
+                y={Math.min(Math.max(y + 4, PAD_T + 4), PAD_T + plotH)}
+                textAnchor="end" fontSize="10"
+                fill={val < 0 ? "#ef4444" : "#94a3b8"}
+                fontFamily="Plus Jakarta Sans, sans-serif"
+              >
+                {fmtAxis(Math.round(val))}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Garis nol kalau ada nilai negatif */}
+        {minVal < 0 && maxVal > 0 && (
+          <line
+            x1={LABEL_W}   y1={scaleY(0).toFixed(1)}
+            x2={W - PAD_R} y2={scaleY(0).toFixed(1)}
+            stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 3"
+          />
+        )}
+
+        {/* Area + garis */}
+        {pts.length > 0 && (
+          <>
+            <path d={area} fill="url(#lineGrad)" />
+            <path d={path} fill="none" stroke="#22c55e" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round" />
+          </>
+        )}
+
+        {/* Titik + label bulan */}
         {pts.map((p, i) => (
           <g key={i}>
-            <circle cx={p.x} cy={p.y} r="3.5"
+            <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="4"
               fill="#fff" stroke="#22c55e" strokeWidth="2" />
-            <text x={p.x} y={H + 16} textAnchor="middle"
-              fontSize="9" fill="#94a3b8"
-              fontFamily="Plus Jakarta Sans, sans-serif">
+            <text x={p.x.toFixed(1)} y={PAD_T + plotH + 18}
+              textAnchor="middle" fontSize="10"
+              fill="#94a3b8" fontFamily="Plus Jakarta Sans, sans-serif">
               {labels[i]}
             </text>
           </g>
@@ -116,34 +198,165 @@ function LineChart() {
   );
 }
 
-// ── Data transaksi ─────────────────────────────────────────────────────────
-const allTransaksi = [
-  { id: 1, tanggal: "31 Okt 2024", keterangan: "Penjualan Toko (Cash)", kategori: "Pemasukan", nominal: 1250000, tipe: "masuk", status: "Sukses" },
-  { id: 2, tanggal: "30 Okt 2024", keterangan: "Belanja Bahan Baku", kategori: "Bahan Baku", nominal: -3400000, tipe: "keluar", status: "Lunas" },
-  { id: 3, tanggal: "29 Okt 2024", keterangan: "Penjualan Online", kategori: "Pemasukan", nominal: 2100000, tipe: "masuk", status: "Sukses" },
-  { id: 4, tanggal: "28 Okt 2024", keterangan: "Tagihan Listrik & Air", kategori: "Operasional", nominal: -850000, tipe: "keluar", status: "Lunas" },
-  { id: 5, tanggal: "27 Okt 2024", keterangan: "Penjualan Toko (Cash)", kategori: "Pemasukan", nominal: 980000, tipe: "masuk", status: "Sukses" },
-  { id: 6, tanggal: "25 Okt 2024", keterangan: "Gaji Karyawan", kategori: "Operasional", nominal: -4500000, tipe: "keluar", status: "Lunas" },
-  { id: 7, tanggal: "24 Okt 2024", keterangan: "Penjualan Grosir", kategori: "Pemasukan", nominal: 5800000, tipe: "masuk", status: "Sukses" },
-  { id: 8, tanggal: "22 Okt 2024", keterangan: "Sewa Tempat", kategori: "Operasional", nominal: -2000000, tipe: "keluar", status: "Lunas" },
-  { id: 9, tanggal: "20 Okt 2024", keterangan: "Penjualan Toko (Cash)", kategori: "Pemasukan", nominal: 1450000, tipe: "masuk", status: "Sukses" },
-  { id: 10, tanggal: "18 Okt 2024", keterangan: "Pembelian Perlengkapan", kategori: "Lain-lain", nominal: -620000, tipe: "keluar", status: "Lunas" },
-  { id: 11, tanggal: "15 Okt 2024", keterangan: "Penjualan Online", kategori: "Pemasukan", nominal: 3200000, tipe: "masuk", status: "Sukses" },
-  { id: 12, tanggal: "12 Okt 2024", keterangan: "Belanja Bahan Baku", kategori: "Bahan Baku", nominal: -2800000, tipe: "keluar", status: "Lunas" },
-];
-
 function formatRp(val) {
-  const abs = Math.abs(val);
+  const abs = Math.abs(val || 0);
   return `Rp ${abs.toLocaleString("id-ID")}`;
 }
 
-// ── Main ───────────────────────────────────────────────────────────────────
+function formatTanggal(str) {
+  if (!str) return "-";
+  return new Date(str).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+}
+
 export default function Laporan() {
-  const [activeTab, setActiveTab] = useState("ringkasan");
-  const [filterTipe, setFilterTipe] = useState("semua");
+  const [activeTab, setActiveTab]         = useState("ringkasan");
+  const [filterTipe, setFilterTipe]       = useState("semua");
   const [filterKategori, setFilterKategori] = useState("semua");
-  const [search, setSearch] = useState("");
-  const [period, setPeriod] = useState("Oktober 2024");
+  const [search, setSearch]               = useState("");
+  const [period]                          = useState("Mei 2026");
+
+  const [transactions, setTransactions]   = useState([]);
+  const [loading, setLoading]             = useState(true);
+  const [aiInsight, setAiInsight]         = useState("Memuat rekomendasi AI...");
+
+  const [currentPage, setCurrentPage]     = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/transactions", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Gagal mengambil data");
+        setTransactions(data.transactions || []);
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTransactions();
+  }, []);
+
+  useEffect(() => {
+    const fetchAIInsight = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/transactions/insights", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setAiInsight(data.insight || "Gagal memproses rekomendasi.");
+      } catch (err) {
+        console.error(err);
+        setAiInsight("Gagal memuat rekomendasi AI.");
+      }
+    };
+    if (!loading) fetchAIInsight();
+  }, [loading]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterTipe, filterKategori]);
+
+  const totalMasuk  = transactions.filter(t => t.type === "INCOME").reduce((a, t) => a + (t.amount || 0), 0);
+  const totalKeluar = transactions.filter(t => t.type === "EXPENSE").reduce((a, t) => a + Math.abs(t.amount || 0), 0);
+  const laba        = totalMasuk - totalKeluar;
+  const saldoAkhir  = laba;
+
+  const chartsData = useMemo(() => {
+    const monthsShort = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"];
+    const anchorDate  = new Date();
+    const monthlyMap  = {};
+    const chartStructure = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(anchorDate.getFullYear(), anchorDate.getMonth() - i, 1);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      monthlyMap[ym] = { bulan: monthsShort[d.getMonth()], masuk: 0, keluar: 0 };
+      chartStructure.push(ym);
+    }
+
+    transactions.forEach(t => {
+      if (!t.date) return;
+      const d  = new Date(t.date);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (!monthlyMap[ym]) return;
+      const amt = Number(t.amount) || 0;
+      if (t.type === "INCOME")  monthlyMap[ym].masuk  += amt;
+      if (t.type === "EXPENSE") monthlyMap[ym].keluar += Math.abs(amt);
+    });
+
+    const barData    = chartStructure.map(ym => monthlyMap[ym]);
+    const lineData   = barData.map(b => b.masuk - b.keluar);
+    const labels     = barData.map(b => b.bulan);
+    const maxBarVal  = Math.max(...barData.flatMap(b => [b.masuk, b.keluar]), 100_000);
+    const maxLineVal = Math.max(...lineData,  100_000);
+    const minLineVal = Math.min(...lineData, 0);
+
+    return { barData, lineData, labels, maxBarVal, maxLineVal, minLineVal };
+  }, [transactions]);
+
+  const categoryBreakdown = useMemo(() => {
+    const groups = {};
+    transactions.filter(t => t.type === "EXPENSE").forEach(t => {
+      const cat = t.category || "Lain-lain";
+      groups[cat] = (groups[cat] || 0) + Math.abs(t.amount || 0);
+    });
+    const colors = ["#1a2a6c","#2563eb","#7F77DD","#22c55e","#f59e0b","#6366f1","#ec4899"];
+    return Object.keys(groups).map((cat, i) => {
+      const val = groups[cat];
+      const pct = totalKeluar > 0 ? Math.round((val / totalKeluar) * 100) : 0;
+      return { label: cat, pct, val, color: colors[i % colors.length] };
+    }).sort((a, b) => b.val - a.val);
+  }, [transactions, totalKeluar]);
+
+  const { incomeBreakdown, expenseBreakdown } = useMemo(() => {
+    const inc = {}, exp = {};
+    transactions.forEach(t => {
+      const amt = Number(t.amount) || 0;
+      const cat = t.category || "Lain-lain";
+      if (t.type === "INCOME")  inc[cat] = (inc[cat] || 0) + amt;
+      if (t.type === "EXPENSE") exp[cat] = (exp[cat] || 0) + Math.abs(amt);
+    });
+    return {
+      incomeBreakdown:  Object.entries(inc).map(([label, val]) => ({ label, val })),
+      expenseBreakdown: Object.entries(exp).map(([label, val]) => ({ label, val })),
+    };
+  }, [transactions]);
+
+  const profitMargin      = totalMasuk > 0 ? ((laba / totalMasuk) * 100).toFixed(1) : 0;
+  const rasioPengeluaran  = totalMasuk > 0 ? ((totalKeluar / totalMasuk) * 100).toFixed(1) : 0;
+  const likuiditas        = totalKeluar > 0 ? (totalMasuk / totalKeluar).toFixed(1) : 0;
+  const pertumbuhan       = 8.2;
+
+  const allKategori = ["semua", ...new Set(transactions.map(t => t.category))];
+
+  const filtered = transactions.filter(t => {
+    const matchTipe   = filterTipe === "semua" || t.type === filterTipe;
+    const matchKat    = filterKategori === "semua" || t.category === filterKategori;
+    const matchSearch = (t.description || "").toLowerCase().includes(search.toLowerCase());
+    return matchTipe && matchKat && matchSearch;
+  });
+
+  const paginatedTransactions = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filtered.slice(start, start + ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
+
+  const totalPages  = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+  const startNumber = filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endNumber   = Math.min(currentPage * ITEMS_PER_PAGE, filtered.length);
 
   const tabs = [
     { id: "ringkasan", label: "Ringkasan" },
@@ -151,45 +364,16 @@ export default function Laporan() {
     { id: "laba-rugi", label: "Laba & Rugi" },
   ];
 
-  const filtered = allTransaksi.filter((t) => {
-    const matchTipe = filterTipe === "semua" || t.tipe === filterTipe;
-    const matchKat = filterKategori === "semua" || t.kategori === filterKategori;
-    const matchSearch = t.keterangan.toLowerCase().includes(search.toLowerCase());
-    return matchTipe && matchKat && matchSearch;
-  });
-
-  const totalMasuk = allTransaksi.filter(t => t.tipe === "masuk").reduce((a, t) => a + t.nominal, 0);
-  const totalKeluar = allTransaksi.filter(t => t.tipe === "keluar").reduce((a, t) => a + Math.abs(t.nominal), 0);
-  const laba = totalMasuk - totalKeluar;
-
   return (
     <div className="laporan-page">
 
-      {/* ── Top bar ── */}
       <div className="lap-topbar">
         <div>
           <h1 className="lap-title">Laporan Keuangan</h1>
-          <p className="lap-sub">Rekap lengkap pemasukan, pengeluaran, dan laba rugi usaha.</p>
-        </div>
-        <div className="lap-topbar-actions">
-          <button className="period-btn">
-            {period}
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="5 8 10 13 15 8" />
-            </svg>
-          </button>
-          <button className="lap-export-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Export PDF
-          </button>
+          <p className="lap-sub">Rekap lengkap pemasukan, pengeluaran, dan laba rugi usaha berbasis real data.</p>
         </div>
       </div>
 
-      {/* ── Summary cards ── */}
       <div className="lap-summary">
         <div className="lap-scard lap-scard-blue">
           <div className="lap-scard-icon">
@@ -200,8 +384,7 @@ export default function Laporan() {
           </div>
           <div>
             <p className="lap-scard-label">Total Pemasukan</p>
-            <p className="lap-scard-val">Rp 14.780.000</p>
-            <p className="lap-scard-trend trend-up">↗ +8.2% vs bulan lalu</p>
+            <p className="lap-scard-val">{formatRp(totalMasuk)}</p>
           </div>
         </div>
 
@@ -214,8 +397,7 @@ export default function Laporan() {
           </div>
           <div>
             <p className="lap-scard-label">Total Pengeluaran</p>
-            <p className="lap-scard-val">Rp 14.170.000</p>
-            <p className="lap-scard-trend trend-down">↘ -2.1% dari batas aman</p>
+            <p className="lap-scard-val">{formatRp(totalKeluar)}</p>
           </div>
         </div>
 
@@ -228,8 +410,7 @@ export default function Laporan() {
           </div>
           <div>
             <p className="lap-scard-label">Laba Bersih</p>
-            <p className="lap-scard-val">Rp 610.000</p>
-            <p className="lap-scard-trend trend-up">↗ Margin 4.1%</p>
+            <p className="lap-scard-val">{formatRp(laba)}</p>
           </div>
         </div>
 
@@ -242,15 +423,13 @@ export default function Laporan() {
           </div>
           <div>
             <p className="lap-scard-label">Saldo Akhir</p>
-            <p className="lap-scard-val">Rp 45.230.000</p>
-            <p className="lap-scard-trend trend-up">↗ +12.5% vs bulan lalu</p>
+            <p className="lap-scard-val">{formatRp(saldoAkhir)}</p>
           </div>
         </div>
       </div>
 
-      {/* ── Tabs ── */}
       <div className="lap-tabs">
-        {tabs.map((t) => (
+        {tabs.map(t => (
           <button
             key={t.id}
             className={`lap-tab ${activeTab === t.id ? "lap-tab-active" : ""}`}
@@ -261,86 +440,64 @@ export default function Laporan() {
         ))}
       </div>
 
-      {/* ══ TAB: RINGKASAN ══ */}
       {activeTab === "ringkasan" && (
         <div className="lap-content">
           <div className="lap-grid-2">
-
-            {/* Chart Pemasukan vs Pengeluaran */}
             <div className="lap-card">
               <div className="lap-card-head">
                 <h2 className="lap-card-title">Pemasukan vs Pengeluaran</h2>
-                <p className="lap-card-desc">6 bulan terakhir</p>
+                <p className="lap-card-desc">6 Bulan Terakhir</p>
               </div>
-              <BarChart />
+              <BarChart data={chartsData.barData} maxVal={chartsData.maxBarVal} />
             </div>
 
-            {/* Tren Laba Bersih */}
             <div className="lap-card">
               <div className="lap-card-head">
                 <h2 className="lap-card-title">Tren Laba Bersih</h2>
-                <p className="lap-card-desc">6 bulan terakhir (juta Rp)</p>
+                <p className="lap-card-desc">Pergerakan Arus Kas</p>
               </div>
-              <LineChart />
-              <div className="laba-summary">
-                <div className="laba-item">
-                  <span className="laba-dot" style={{ background: "#22c55e" }} />
-                  <span className="laba-key">Tertinggi</span>
-                  <span className="laba-val">Rp 42jt (Okt)</span>
-                </div>
-                <div className="laba-item">
-                  <span className="laba-dot" style={{ background: "#ef4444" }} />
-                  <span className="laba-key">Terendah</span>
-                  <span className="laba-val">Rp 20jt (Jul)</span>
-                </div>
-                <div className="laba-item">
-                  <span className="laba-dot" style={{ background: "#2563eb" }} />
-                  <span className="laba-key">Rata-rata</span>
-                  <span className="laba-val">Rp 28.5jt</span>
-                </div>
-              </div>
+              <LineChart
+                dataPoints={chartsData.lineData}
+                labels={chartsData.labels}
+                maxVal={chartsData.maxLineVal}
+                minVal={chartsData.minLineVal}
+              />
             </div>
           </div>
 
-          {/* Breakdown Pengeluaran */}
-          <div className="lap-card">
+          <div className="lap-card" style={{ marginTop: "20px" }}>
             <div className="lap-card-head">
               <h2 className="lap-card-title">Breakdown Pengeluaran per Kategori</h2>
-              <p className="lap-card-desc">Oktober 2024</p>
+              <p className="lap-card-desc">Akumulasi Real-Time</p>
             </div>
             <div className="breakdown-grid">
-              {[
-                { label: "Bahan Baku", pct: 44, val: "Rp 6.200.000", color: "#1a2a6c" },
-                { label: "Gaji Karyawan", pct: 32, val: "Rp 4.500.000", color: "#2563eb" },
-                { label: "Sewa Tempat", pct: 14, val: "Rp 2.000.000", color: "#7F77DD" },
-                { label: "Listrik & Air", pct: 6, val: "Rp 850.000", color: "#22c55e" },
-                { label: "Lain-lain", pct: 4, val: "Rp 620.000", color: "#f59e0b" },
-              ].map((k) => (
-                <div key={k.label} className="breakdown-row">
-                  <div className="breakdown-left">
-                    <span className="breakdown-dot" style={{ background: k.color }} />
-                    <span className="breakdown-label">{k.label}</span>
-                  </div>
-                  <div className="breakdown-bar-wrap">
-                    <div className="breakdown-track">
-                      <div className="breakdown-fill"
-                        style={{ width: `${k.pct}%`, background: k.color }} />
+              {categoryBreakdown.length === 0 ? (
+                <p style={{ color: "#94a3b8", padding: "10px 0" }}>Belum ada data pengeluaran.</p>
+              ) : (
+                categoryBreakdown.map(k => (
+                  <div key={k.label} className="breakdown-row">
+                    <div className="breakdown-left">
+                      <span className="breakdown-dot" style={{ background: k.color }} />
+                      <span className="breakdown-label">{k.label}</span>
                     </div>
-                    <span className="breakdown-pct">{k.pct}%</span>
+                    <div className="breakdown-bar-wrap">
+                      <div className="breakdown-track">
+                        <div className="breakdown-fill" style={{ width: `${k.pct}%`, background: k.color }} />
+                      </div>
+                      <span className="breakdown-pct">{k.pct}%</span>
+                    </div>
+                    <span className="breakdown-val">{formatRp(k.val)}</span>
                   </div>
-                  <span className="breakdown-val">{k.val}</span>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ══ TAB: TRANSAKSI ══ */}
       {activeTab === "transaksi" && (
         <div className="lap-content">
           <div className="lap-card">
-            {/* Filter bar */}
             <div className="trx-filter-bar">
               <div className="trx-search-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -351,144 +508,160 @@ export default function Laporan() {
                   className="trx-search"
                   placeholder="Cari transaksi..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={e => setSearch(e.target.value)}
                 />
               </div>
               <div className="trx-filters">
-                <select className="trx-select"
-                  value={filterTipe}
-                  onChange={(e) => setFilterTipe(e.target.value)}>
+                <select className="trx-select" value={filterTipe} onChange={e => setFilterTipe(e.target.value)}>
                   <option value="semua">Semua Tipe</option>
-                  <option value="masuk">Pemasukan</option>
-                  <option value="keluar">Pengeluaran</option>
+                  <option value="INCOME">Pemasukan</option>
+                  <option value="EXPENSE">Pengeluaran</option>
                 </select>
-                <select className="trx-select"
-                  value={filterKategori}
-                  onChange={(e) => setFilterKategori(e.target.value)}>
-                  <option value="semua">Semua Kategori</option>
-                  <option value="Pemasukan">Pemasukan</option>
-                  <option value="Bahan Baku">Bahan Baku</option>
-                  <option value="Operasional">Operasional</option>
-                  <option value="Lain-lain">Lain-lain</option>
+                <select className="trx-select" value={filterKategori} onChange={e => setFilterKategori(e.target.value)}>
+                  {allKategori.map(kat => (
+                    <option key={kat} value={kat}>
+                      {kat === "semua" ? "Semua Kategori" : kat}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Tabel */}
             <div className="trx-table-wrap">
-              <table className="trx-table">
-                <thead>
-                  <tr>
-                    <th>Keterangan</th>
-                    <th>Kategori</th>
-                    <th>Tanggal</th>
-                    <th>Status</th>
-                    <th>Nominal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
+              {loading ? (
+                <div style={{ padding: "20px", textAlign: "center" }}>Memuat data...</div>
+              ) : (
+                <table className="trx-table">
+                  <thead>
                     <tr>
-                      <td colSpan={5} className="trx-empty">
-                        Tidak ada transaksi yang cocok.
-                      </td>
+                      <th>Keterangan</th>
+                      <th>Kategori</th>
+                      <th>Tanggal</th>
+                      <th>Status</th>
+                      <th>Nominal</th>
                     </tr>
-                  ) : (
-                    filtered.map((t) => (
-                      <tr key={t.id}>
-                        <td className="trx-keterangan">
-                          <span className={`trx-type-dot ${t.tipe === "masuk" ? "dot-masuk" : "dot-keluar"}`} />
-                          {t.keterangan}
-                        </td>
-                        <td>
-                          <span className="trx-kategori-tag">{t.kategori}</span>
-                        </td>
-                        <td className="trx-tanggal">{t.tanggal}</td>
-                        <td>
-                          <span className={`trx-status status-${t.status.toLowerCase()}`}>
-                            {t.status}
-                          </span>
-                        </td>
-                        <td className={`trx-nominal ${t.tipe === "masuk" ? "nominal-plus" : "nominal-minus"}`}>
-                          {t.tipe === "masuk" ? "+" : "-"} {formatRp(t.nominal)}
-                        </td>
+                  </thead>
+                  <tbody>
+                    {filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="trx-empty">Tidak ada transaksi yang cocok.</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      paginatedTransactions.map(t => (
+                        <tr key={t.id}>
+                          <td className="trx-keterangan">
+                            <span className={`trx-type-dot ${t.type === "INCOME" ? "dot-masuk" : "dot-keluar"}`} />
+                            {t.description}
+                          </td>
+                          <td><span className="trx-kategori-tag">{t.category}</span></td>
+                          <td className="trx-tanggal">{formatTanggal(t.date)}</td>
+                          <td><span className="trx-status status-sukses">Sukses</span></td>
+                          <td className={`trx-nominal ${t.type === "INCOME" ? "nominal-plus" : "nominal-minus"}`}>
+                            {t.type === "INCOME" ? "+" : "-"} {formatRp(t.amount)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
 
-            <div className="trx-footer">
-              Menampilkan {filtered.length} dari {allTransaksi.length} transaksi
+            <div className="trx-footer" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px", marginTop:"14px" }}>
+              <span>
+                Menampilkan {startNumber}–{endNumber} dari {filtered.length} transaksi (Total database: {transactions.length})
+              </span>
+              {totalPages > 1 && (
+                <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                  <button
+                    className="trx-select"
+                    style={{ padding:"4px 12px", height:"auto", cursor: currentPage===1 ? "not-allowed" : "pointer", opacity: currentPage===1 ? 0.5 : 1, background:"#fff" }}
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(p-1, 1))}
+                  >
+                    &larr; Prev
+                  </button>
+                  <span style={{ fontSize:"13px", color:"#64748b" }}>
+                    Hal <strong>{currentPage}</strong> dari {totalPages}
+                  </span>
+                  <button
+                    className="trx-select"
+                    style={{ padding:"4px 12px", height:"auto", cursor: currentPage===totalPages ? "not-allowed" : "pointer", opacity: currentPage===totalPages ? 0.5 : 1, background:"#fff" }}
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(p+1, totalPages))}
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ══ TAB: LABA RUGI ══ */}
       {activeTab === "laba-rugi" && (
         <div className="lap-content">
           <div className="lap-grid-2">
             <div className="lap-card">
               <h2 className="lap-card-title">Laporan Laba & Rugi</h2>
-              <p className="lap-card-desc" style={{ marginBottom: 16 }}>Oktober 2024</p>
+              <p className="lap-card-desc" style={{ marginBottom: 16 }}>{period}</p>
 
               <div className="lr-section">
                 <div className="lr-section-title lr-green-title">PENDAPATAN</div>
-                {[
-                  { label: "Penjualan Toko (Cash)", val: 3680000 },
-                  { label: "Penjualan Online", val: 5300000 },
-                  { label: "Penjualan Grosir", val: 5800000 },
-                ].map((r) => (
-                  <div key={r.label} className="lr-row">
-                    <span className="lr-label">{r.label}</span>
-                    <span className="lr-val lr-plus">{formatRp(r.val)}</span>
+                {incomeBreakdown.length > 0 ? (
+                  incomeBreakdown.map(r => (
+                    <div key={r.label} className="lr-row">
+                      <span className="lr-label">{r.label}</span>
+                      <span className="lr-val lr-plus">{formatRp(r.val)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="lr-row">
+                    <span className="lr-label" style={{ color:"#94a3b8" }}>Belum ada data pendapatan</span>
                   </div>
-                ))}
+                )}
                 <div className="lr-subtotal">
                   <span>Total Pendapatan</span>
-                  <span className="lr-plus">Rp 14.780.000</span>
+                  <span className="lr-plus">{formatRp(totalMasuk)}</span>
                 </div>
               </div>
 
               <div className="lr-section">
                 <div className="lr-section-title lr-red-title">BEBAN USAHA</div>
-                {[
-                  { label: "Bahan Baku", val: 6200000 },
-                  { label: "Gaji Karyawan", val: 4500000 },
-                  { label: "Sewa Tempat", val: 2000000 },
-                  { label: "Listrik & Air", val: 850000 },
-                  { label: "Perlengkapan & Lain-lain", val: 620000 },
-                ].map((r) => (
-                  <div key={r.label} className="lr-row">
-                    <span className="lr-label">{r.label}</span>
-                    <span className="lr-val lr-minus">{formatRp(r.val)}</span>
+                {expenseBreakdown.length > 0 ? (
+                  expenseBreakdown.map(r => (
+                    <div key={r.label} className="lr-row">
+                      <span className="lr-label">{r.label}</span>
+                      <span className="lr-val lr-minus">{formatRp(r.val)}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="lr-row">
+                    <span className="lr-label" style={{ color:"#94a3b8" }}>Belum ada data beban</span>
                   </div>
-                ))}
+                )}
                 <div className="lr-subtotal">
                   <span>Total Beban</span>
-                  <span className="lr-minus">Rp 14.170.000</span>
+                  <span className="lr-minus">{formatRp(totalKeluar)}</span>
                 </div>
               </div>
 
               <div className="lr-total">
                 <span className="lr-total-label">LABA BERSIH</span>
-                <span className="lr-total-val">Rp 610.000</span>
+                <span className="lr-total-val">{formatRp(laba)}</span>
               </div>
             </div>
 
-            {/* Rasio & Analisis */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
               <div className="lap-card">
                 <h2 className="lap-card-title">Rasio Keuangan</h2>
-                <p className="lap-card-desc" style={{ marginBottom: 14 }}>Indikator kesehatan usaha</p>
+                <p className="lap-card-desc" style={{ marginBottom:14 }}>Indikator kesehatan usaha</p>
                 {[
-                  { label: "Profit Margin", val: "4.1%", status: "warn", desc: "Di bawah rata-rata sektor (8%)" },
-                  { label: "Rasio Pengeluaran", val: "95.9%", status: "bad", desc: "Terlalu tinggi, perlu efisiensi" },
-                  { label: "Pertumbuhan Pendapatan", val: "+8.2%", status: "good", desc: "Lebih baik dari bulan lalu" },
-                  { label: "Likuiditas", val: "2.3×", status: "good", desc: "Arus kas cukup sehat" },
-                ].map((r) => (
+                  { label:"Profit Margin",            val:`${profitMargin}%`,   status: profitMargin >= 10 ? "good" : "warn",    desc: profitMargin >= 10 ? "Margin profit terpantau sehat" : "Di bawah rata-rata target (10%)" },
+                  { label:"Rasio Pengeluaran",         val:`${rasioPengeluaran}%`, status: rasioPengeluaran > 80 ? "bad" : "good", desc: rasioPengeluaran > 80 ? "Terlalu tinggi, perlu efisiensi" : "Beban operasional terkendali" },
+                  { label:"Pertumbuhan Pendapatan",    val:`${pertumbuhan >= 0 ? "+" : ""}${pertumbuhan}%`, status: pertumbuhan >= 0 ? "good" : "bad", desc: pertumbuhan >= 0 ? "Lebih baik dari bulan lalu" : "Terjadi penurunan omset" },
+                  { label:"Likuiditas",                val:`${likuiditas}×`,      status: likuiditas >= 1 ? "good" : "warn",       desc: likuiditas >= 1 ? "Arus kas cukup sehat" : "Perputaran uang sedang lambat" },
+                ].map(r => (
                   <div key={r.label} className="rasio-row">
                     <div className="rasio-left">
                       <span className="rasio-label">{r.label}</span>
@@ -509,11 +682,7 @@ export default function Laporan() {
                 </div>
                 <div>
                   <p className="insight-card-title">Rekomendasi AI</p>
-                  <p className="insight-card-text">
-                    Profit margin bulan ini 4.1% masih di bawah target. AI menyarankan
-                    efisiensi biaya bahan baku melalui pembelian grosir dan evaluasi
-                    pengeluaran operasional yang bisa ditekan.
-                  </p>
+                  <p className="insight-card-text">{aiInsight}</p>
                   <button className="insight-card-btn">Lihat Detail AI →</button>
                 </div>
               </div>
@@ -521,7 +690,6 @@ export default function Laporan() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

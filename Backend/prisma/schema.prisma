@@ -7,34 +7,55 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Tabel User
 model User {
-  id           String        @id @default(uuid())
-  email        String        @unique
-  name         String
-  password     String       
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String       
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   transactions Transaction[] 
+  profile      MerchantProfile? 
 }
 
-// Tabel Transaksi Keuangan
+model MerchantProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique 
+  namaToko     String
+  pemilik      String
+  jenisUsaha   String
+  deskripsi    String?  @db.Text 
+  telepon      String
+  emailUsaha   String
+  alamat       String   @db.Text
+  kota         String
+  provinsi     String
+  kodePOS      String
+  berdiriSejak DateTime
+  logoToko     String?  @db.Text
+  npwp         String?  
+  nib          String?  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Transaction {
   id          String          @id @default(uuid())
   userId      String
   type        TransactionType 
   amount      Float           
   category    String          
-  description String?        
+  description String?         
   date        DateTime        
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  // Relasi ke tabel User
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Definisi tipe transaksi khusus PostgreSQL
 enum TransactionType {
   INCOME  // Pemasukan
   EXPENSE // Pengeluaran
