@@ -3,9 +3,7 @@ import "../css/Transaksi.css";
 
 const KATEGORI_PEMASUKAN  = ["Penjualan Produk", "Jasa Layanan", "Lain-lain"];
 const KATEGORI_PENGELUARAN = ["Bahan Baku", "Gaji Karyawan", "Sewa Tempat", "Listrik & Air", "Operasional", "Lain-lain"];
-
 const formatRp = (n) => "Rp " + (n || 0).toLocaleString("id-ID");
-
 const formatTanggal = (str) => {
   if (!str) return "-";
   return new Date(str).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
@@ -17,18 +15,18 @@ const toDisplay = (str) => {
   return n ? n.toLocaleString("id-ID") : "";
 };
 
-// ── KOMPONEN UTILITAS KARTU (STAT CARD LAMA) ─────────────────────────────────
 function StatCard({ label, value, sub, valueClass }) {
   return (
     <div className="stat-card">
-      <p className="stat-card__label">{label}</p>
-      <p className={`stat-card__value ${valueClass ?? ""}`}>{value}</p>
-      {sub && <p className="stat-card__sub">{sub}</p>}
+      <div className="stat-card__info">
+        <p className="stat-card__label">{label}</p>
+        <p className={`stat-card__value ${valueClass ?? ""}`}>{value}</p>
+        {sub && <p className="stat-card__sub">{sub}</p>}
+      </div>
     </div>
   );
 }
 
-// ── KOMPONEN MODAL INPUT (SESUAI STYLE FORM & MODAL LAMA) ──────────────────────
 function TransaksiModal({ onClose, onSave }) {
   const [type, setType] = useState("INCOME");
   const [amountRaw, setAmountRaw] = useState("");
@@ -51,10 +49,7 @@ function TransaksiModal({ onClose, onSave }) {
   return (
     <div className="modal-overlay">
       <div className="modal-box">
-        <div className="modal-header">
-          <h3 className="modal-header__title">Tambah Transaksi Baru</h3>
-          <button className="modal-close" type="button" onClick={onClose}>×</button>
-        </div>
+        <h3 className="modal-title">Tambah Transaksi Baru</h3>
         <form onSubmit={handleSubmit}>
           
           <div className="form-group">
@@ -123,9 +118,13 @@ function TransaksiModal({ onClose, onSave }) {
             />
           </div>
 
-          <div className="modal-footer">
-            <button type="button" className="btn-cancel" onClick={onClose}>Batal</button>
-            <button type="submit" className="btn-save">Simpan</button>
+          <div className="modal-actions" style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px" }}>
+            <button type="button" className="btn-outline" onClick={onClose}>
+              Batal
+            </button>
+            <button type="submit" className="btn-primary-custom">
+              Simpan
+            </button>
           </div>
         </form>
       </div>
@@ -133,19 +132,15 @@ function TransaksiModal({ onClose, onSave }) {
   );
 }
 
-// ── MAIN LAYER HALAMAN TRANSAKSI ─────────────────────────────────────────────
 export default function Transaksi() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [filterType, setFilterType] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
   const [showModal, setShowModal] = useState(false);
-
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -154,7 +149,6 @@ export default function Transaksi() {
     };
   };
 
-  // 1. Ambil Data dari Backend
   const fetchTransactions = async () => {
     try {
       setLoading(true);
@@ -162,10 +156,7 @@ export default function Transaksi() {
         headers: getAuthHeaders(),
       });
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.error || "Gagal mengambil data transaksi");
-
-      // Menyesuaikan kiriman .data backend kita
       setTransactions(data.data || []);
     } catch (err) {
       setError(err.message);
@@ -178,7 +169,6 @@ export default function Transaksi() {
     fetchTransactions();
   }, []);
 
-  // 2. Simpan Transaksi Baru
   const handleSave = async (payload) => {
     try {
       const response = await fetch("http://localhost:5000/api/transactions", {
@@ -197,7 +187,6 @@ export default function Transaksi() {
     }
   };
 
-  // 3. Hapus Transaksi
   const handleDelete = async (id) => {
     if (!window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) return;
     try {
@@ -215,7 +204,6 @@ export default function Transaksi() {
     }
   };
 
-  // 4. Kalkulasi Data Kartu Ringkasan Atas
   const stats = useMemo(() => {
     let income = 0;
     let expense = 0;
@@ -230,7 +218,6 @@ export default function Transaksi() {
     };
   }, [transactions]);
 
-  // 5. Fitur Search & Tab Filter Jenis Transaksi
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
       const matchesType = filterType === "ALL" || t.type === filterType;
@@ -246,7 +233,6 @@ export default function Transaksi() {
     setCurrentPage(1);
   }, [filterType, searchQuery]);
 
-  // 6. Logika Lembar Pagination Tabel
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -261,73 +247,77 @@ export default function Transaksi() {
 
   return (
     <div className="transaksi-page">
-      
-      {/* 🔴 HEADER UTAMA (Sesuai Transaksi.css Lama) */}
       <div className="transaksi-header">
         <div>
-          <h1 className="transaksi-header__title">Transaksi</h1>
-          <p className="transaksi-header__sub">Catat & kelola semua pemasukan dan pengeluaran</p>
+          <h1 className="transaksi-header__title">Arus Keuangan</h1>
+          <p className="transaksi-header__sub">Kelola seluruh riwayat pemasukan dan pengeluaran toko Anda di sini.</p>
         </div>
         <div className="transaksi-header__actions">
-          <button className="btn-outline" onClick={() => {}}>Export CSV</button>
-          <button className="btn-primary" onClick={() => setShowModal(true)}>
+          <button className="btn-primary-custom" onClick={() => setShowModal(true)}>
             + Tambah Transaksi
           </button>
         </div>
       </div>
 
-      {/* 🔴 STAT ROW RINGKASAN (Sesuai Transaksi.css Lama) */}
-      <div className="stat-grid">
+      <div className="stat-row">
         <StatCard
           label="Total Pemasukan"
           value={formatRp(stats.totalIncome)}
           sub={`${transactions.filter((t) => t.type === "INCOME").length} item masuk`}
-          valueClass="stat-card__value--green"
+          valueClass="text-green"
         />
         <StatCard
           label="Total Pengeluaran"
           value={formatRp(stats.totalExpense)}
           sub={`${transactions.filter((t) => t.type === "EXPENSE").length} pengeluaran`}
-          valueClass="stat-card__value--red"
+          valueClass="text-red"
         />
         <StatCard
           label="Sisa Saldo Kas"
           value={formatRp(stats.balance)}
           sub="Sisa dana bersih"
-          valueClass={stats.balance >= 0 ? "stat-card__value--green" : "stat-card__value--red"}
+          valueClass={stats.balance >= 0 ? "text-blue" : "text-red"}
         />
       </div>
 
-      {/* 🔴 BLOK FILTER TABS DAN SEARCH BAR */}
-      <div className="table-card">
-        <div className="table-card__header">
-          <span className="table-card__title">Riwayat Transaksi</span>
-          <div className="table-card__controls">
-            <div className="search-wrap">
-              <svg className="search-wrap__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input
-                type="text"
-                placeholder="Cari transaksi..."
-                className="search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <select
-              className="filter-select"
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
+      <div className="table-card" style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", border: "0.5px solid #e2e8f0" }}>
+        <div className="table-controls" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "16px", flexWrap: "wrap" }}>
+          <div className="filter-tabs" style={{ display: "flex", gap: "8px" }}>
+            <button
+              className={`btn-outline ${filterType === "ALL" ? "active" : ""}`}
+              style={{ background: filterType === "ALL" ? "#2d6ef7" : "#fff", color: filterType === "ALL" ? "#fff" : "#374151" }}
+              onClick={() => setFilterType("ALL")}
             >
-              <option value="ALL">Semua Jenis</option>
-              <option value="INCOME">Pemasukan</option>
-              <option value="EXPENSE">Pengeluaran</option>
-            </select>
+              Semua ({transactions.length})
+            </button>
+            <button
+              className={`btn-outline ${filterType === "INCOME" ? "active" : ""}`}
+              style={{ background: filterType === "INCOME" ? "#10b981" : "#fff", color: filterType === "INCOME" ? "#fff" : "#374151" }}
+              onClick={() => setFilterType("INCOME")}
+            >
+              Pemasukan
+            </button>
+            <button
+              className={`btn-outline ${filterType === "EXPENSE" ? "active" : ""}`}
+              style={{ background: filterType === "EXPENSE" ? "#ef4444" : "#fff", color: filterType === "EXPENSE" ? "#fff" : "#374151" }}
+              onClick={() => setFilterType("EXPENSE")}
+            >
+              Pengeluaran
+            </button>
+          </div>
+
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Cari kategori atau keterangan..."
+              className="search-input"
+              style={{ padding: "8px 14px", border: "0.5px solid #d1d5db", borderRadius: "8px", fontSize: "13px", minWidth: "240px", outline: "none" }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 
-        {/* 🔴 TABEL DATA UTAMA (Sesuai Transaksi.css Lama) */}
         <div className="table-wrapper">
           <table className="data-table">
             <thead>
@@ -352,7 +342,7 @@ export default function Transaksi() {
                   <tr key={t.id}>
                     <td className="font-medium text-slate-700">{formatTanggal(t.date)}</td>
                     <td>
-                      <span className={`badge ${t.type === "INCOME" ? "badge--in" : "badge--out"}`}>
+                      <span className={`badge ${t.type === "INCOME" ? "badge-green" : "badge-red"}`}>
                         {t.type === "INCOME" ? "Pemasukan" : "Pengeluaran"}
                       </span>
                     </td>
@@ -360,7 +350,7 @@ export default function Transaksi() {
                     <td className="text-slate-400 max-w-xs truncate" style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {t.description || "-"}
                     </td>
-                    <td className={t.type === "INCOME" ? "amount--in" : "amount--out"} style={{ fontWeight: "700", textAlign: "right" }}>
+                    <td className={`table-amount ${t.type === "INCOME" ? "text-green" : "text-red"}`} style={{ fontWeight: "700", textAlign: "right" }}>
                       {t.type === "INCOME" ? "+ " : "- "} {formatRp(t.amount)}
                     </td>
                     <td style={{ textAlign: "center" }}>
@@ -379,7 +369,6 @@ export default function Transaksi() {
           </table>
         </div>
 
-        {/* 🔴 FOOTER PAGINATION BAWAH (Sesuai Transaksi.css Lama) */}
         <div className="table-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", fontSize: "13px", color: "#6b7280" }}>
           <span className="table-footer__text">
             Menampilkan {startNumber}–{endNumber} dari {filtered.length} transaksi
@@ -411,9 +400,7 @@ export default function Transaksi() {
             </div>
           )}
         </div>
-
       </div>
-
       {showModal && (
         <TransaksiModal onClose={() => setShowModal(false)} onSave={handleSave} />
       )}

@@ -35,13 +35,11 @@ export default function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 2. Validasi Token wajib ada
     if (!token) {
       setError("Token tidak valid atau tidak ditemukan di URL. Silakan minta link reset baru.");
       return;
     }
 
-    // 3. Validasi kecocokan password baru di frontend
     if (form.password !== form.confirmPassword) {
       setError("Password baru dan Konfirmasi Password tidak sama!");
       return;
@@ -52,7 +50,6 @@ export default function ResetPassword() {
       setError("");
       setMessage("");
 
-      // 4. Hit ke API backend Express (Port 5000) sesuai authroutes.js kamu
       const response = await fetch("http://localhost:5000/api/auth/reset-password", {
         method: "POST",
         headers: {
@@ -67,13 +64,10 @@ export default function ResetPassword() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Ingat backend kamu pakai key 'error' untuk penanganan gagal
         throw new Error(data.error || "Gagal memperbarui password");
       }
 
       setMessage(data.message || "Password berhasil diperbarui!");
-      
-      // Tunggu 2 detik lalu tendang ke halaman login
       setTimeout(() => {
         navigate("/login");
       }, 2500);
@@ -88,8 +82,6 @@ export default function ResetPassword() {
 
   return (
     <div className="register-page">
-
-      {/* LEFT SIDE */}
       <div className="register-left">
         <div className="overlay"></div>
         <div className="register-left-content">
@@ -120,7 +112,6 @@ export default function ResetPassword() {
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
       <div className="register-right">
         <div className="register-card">
           
@@ -129,21 +120,18 @@ export default function ResetPassword() {
             Silakan masukkan password baru Anda minimum 6 karakter
           </p>
 
-          {/* Banner Jika Token Tidak Ditemukan di URL */}
           {!token && !message && (
             <div className="register-error-banner" style={{ background: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa", padding: "10px", borderRadius: "8px", fontSize: "13px", marginBottom: "16px" }}>
               ⚠️ Ambil link reset terbaru dari terminal backend kamu bro.
             </div>
           )}
 
-          {/* Banner Feedback Error */}
           {error && (
             <div className="register-error-banner" style={{ background: "#fee2e2", color: "#ef4444", padding: "10px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", marginBottom: "16px", border: "1px solid #fca5a5" }}>
               {error}
             </div>
           )}
 
-          {/* Banner Feedback Sukses */}
           {message && (
             <div className="register-success-banner" style={{ background: "#dcfce7", color: "#16a34a", padding: "10px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", marginBottom: "16px", border: "1px solid #bbf7d0" }}>
               {message} <br /> <span style={{ fontSize: "11px", fontWeight: "normal" }}>Mengalihkan ke halaman login...</span>

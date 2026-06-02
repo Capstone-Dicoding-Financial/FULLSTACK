@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import "../css/Laporan.css";
 
-// ── Helpers format angka sumbu Y ──────────────────────────────────────────────
 function fmtAxis(val) {
   const abs = Math.abs(val);
   const sign = val < 0 ? "-" : "";
@@ -11,25 +10,21 @@ function fmtAxis(val) {
   return `${sign}${abs}`;
 }
 
-// ── BarChart Baru: Menggunakan Sistem Slice & Dimensi yang Sama dengan LineChart ──
 function BarChart({ data, maxVal }) {
-  const LABEL_W = 44;   // Lebar area label disamakan dengan LineChart agar garis grid sejajar lurus
+  const LABEL_W = 44;   
   const PAD_T   = 12;
   const PAD_B   = 28;
   const PAD_R   = 12;
-  const W       = 520;   // Lebar dasar disamakan dengan LineChart (520px)
-  const H       = 140;   // Tinggi dasar disamakan dengan LineChart (140px)
+  const W       = 520;   
+  const H       = 140;   
   const plotW   = W - LABEL_W - PAD_R;
   const plotH   = H;
   const totalH  = PAD_T + H + PAD_B;
   const safeMax = maxVal || 1;
-
   const ticks = [1, 0.75, 0.5, 0.25, 0];
-
-  // Hitung pembagian space secara dinamis agar batang memenuhi seluruh area SVG
   const groupSlice = plotW / (data.length || 1);
-  const barW       = Math.max(14, groupSlice * 0.25); // Tebal batang menyesuaikan proporsi space
-  const gap        = 4;  // Jarak antara batang Pemasukan & Pengeluaran
+  const barW       = Math.max(14, groupSlice * 0.25); 
+  const gap        = 4;  
   const groupWidth = barW * 2 + gap;
 
   return (
@@ -38,9 +33,8 @@ function BarChart({ data, maxVal }) {
         viewBox={`0 0 ${W} ${totalH}`}
         preserveAspectRatio="xMidYMid meet"
         className="barchart-svg"
-        style={{ width: "100%", height: "auto" }}
-      >
-        {/* Grid + label Y */}
+        style={{ width: "100%", height: "auto" }}>
+
         {ticks.map((t) => {
           const y   = PAD_T + (1 - t) * plotH;
           const val = Math.round(safeMax * t);
@@ -64,34 +58,27 @@ function BarChart({ data, maxVal }) {
           );
         })}
 
-        {/* Batang Diagram */}
         {data.map((d, i) => {
-          // Menentukan titik tengah dari slice kelompok data bulan
           const sliceCenter = LABEL_W + (i + 0.5) * groupSlice;
           const xMasuk      = sliceCenter - groupWidth / 2;
           const xKeluar     = xMasuk + barW + gap;
-
           const hMasuk  = (d.masuk  / safeMax) * plotH;
           const hKeluar = (d.keluar / safeMax) * plotH;
-
           const yMasuk  = PAD_T + plotH - hMasuk;
           const yKeluar = PAD_T + plotH - hKeluar;
 
           return (
             <g key={d.bulan}>
-              {/* Batang Pemasukan */}
               <rect
                 x={xMasuk.toFixed(1)} y={yMasuk.toFixed(1)}
                 width={barW} height={Math.max(0, hMasuk)}
                 rx="3" fill="#2563eb" opacity="0.85"
               />
-              {/* Batang Pengeluaran */}
               <rect
                 x={xKeluar.toFixed(1)} y={yKeluar.toFixed(1)}
                 width={barW} height={Math.max(0, hKeluar)}
                 rx="3" fill="#ef4444" opacity="0.75"
               />
-              {/* Label Bulan */}
               <text
                 x={sliceCenter.toFixed(1)} y={PAD_T + plotH + 18}
                 textAnchor="middle" fontSize="10"
@@ -117,7 +104,6 @@ function BarChart({ data, maxVal }) {
   );
 }
 
-// ── LineChart dengan label sumbu Y ────────────────────────────────────────────
 function LineChart({ dataPoints, labels, maxVal, minVal }) {
   const LABEL_W = 44;
   const PAD_T   = 12;
@@ -129,13 +115,10 @@ function LineChart({ dataPoints, labels, maxVal, minVal }) {
   const plotH   = H;
   const totalH  = PAD_T + H + PAD_B;
   const range   = (maxVal - minVal) || 1;
-
   const ticks = [maxVal, minVal + range * 0.66, minVal + range * 0.33, minVal];
-
   const scaleY = (v) => PAD_T + plotH - ((v - minVal) / range) * plotH;
   const scaleX = (i) =>
     LABEL_W + (dataPoints.length > 1 ? (i / (dataPoints.length - 1)) * plotW : plotW / 2);
-
   const pts  = dataPoints.map((v, i) => ({ x: scaleX(i), y: scaleY(v) }));
   const path = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
   const areaBottom = PAD_T + plotH;
@@ -158,7 +141,6 @@ function LineChart({ dataPoints, labels, maxVal, minVal }) {
           </linearGradient>
         </defs>
 
-        {/* Grid + label Y */}
         {ticks.map((val, idx) => {
           const y = scaleY(val);
           return (
@@ -181,7 +163,6 @@ function LineChart({ dataPoints, labels, maxVal, minVal }) {
           );
         })}
 
-        {/* Garis nol kalau ada nilai negatif */}
         {minVal < 0 && maxVal > 0 && (
           <line
             x1={LABEL_W}   y1={scaleY(0).toFixed(1)}
@@ -189,8 +170,6 @@ function LineChart({ dataPoints, labels, maxVal, minVal }) {
             stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 3"
           />
         )}
-
-        {/* Area + garis */}
         {pts.length > 0 && (
           <>
             <path d={area} fill="url(#lineGrad)" />
@@ -198,8 +177,6 @@ function LineChart({ dataPoints, labels, maxVal, minVal }) {
               strokeLinecap="round" strokeLinejoin="round" />
           </>
         )}
-
-        {/* Titik + label bulan */}
         {pts.map((p, i) => (
           <g key={i}>
             <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="4"
@@ -220,7 +197,6 @@ function formatRp(val) {
   const abs = Math.abs(val || 0);
   return `Rp ${abs.toLocaleString("id-ID")}`;
 }
-
 function formatTanggal(str) {
   if (!str) return "-";
   return new Date(str).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
@@ -232,16 +208,12 @@ export default function Laporan() {
   const [filterKategori, setFilterKategori] = useState("semua");
   const [search, setSearch]               = useState("");
   const [period]                          = useState("Mei 2026");
-
   const [transactions, setTransactions]   = useState([]);
   const [loading, setLoading]             = useState(true);
   const [aiInsight, setAiInsight]         = useState("Memuat rekomendasi AI...");
   const [isExporting, setIsExporting]     = useState(false);
-
   const [currentPage, setCurrentPage]     = useState(1);
   const ITEMS_PER_PAGE = 10;
-
-  // ── Helper auth header — konsisten dengan transactioncontroller ───────────
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -260,8 +232,6 @@ export default function Laporan() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Gagal mengambil data");
 
-        // FIX: transactioncontroller mengembalikan { success, data: [...] }
-        // bukan { transactions: [...] }
         setTransactions(data.data || []);
       } catch (err) {
         console.error("Error fetching transactions:", err);
@@ -296,7 +266,6 @@ export default function Laporan() {
   const totalKeluar = transactions.filter(t => t.type === "EXPENSE").reduce((a, t) => a + Math.abs(t.amount || 0), 0);
   const laba        = totalMasuk - totalKeluar;
   const saldoAkhir  = laba;
-
   const chartsData = useMemo(() => {
     const monthsShort = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"];
     const anchorDate  = new Date();
@@ -362,9 +331,7 @@ export default function Laporan() {
   const rasioPengeluaran  = totalMasuk > 0 ? ((totalKeluar / totalMasuk) * 100).toFixed(1) : 0;
   const likuiditas        = totalKeluar > 0 ? (totalMasuk / totalKeluar).toFixed(1) : 0;
   const pertumbuhan       = 8.2;
-
   const allKategori = ["semua", ...new Set(transactions.map(t => t.category))];
-
   const filtered = transactions.filter(t => {
     const matchTipe   = filterTipe === "semua" || t.type === filterTipe;
     const matchKat    = filterKategori === "semua" || t.category === filterKategori;
@@ -387,11 +354,9 @@ export default function Laporan() {
     { id: "laba-rugi", label: "Laba & Rugi" },
   ];
 
-  // ── FUNGSI UTAMA EXPORT PDF (DYNAMIC IMPORT) ───────────────────────────────
   const handleExportPDF = () => {
     setIsExporting(true);
     const targetElement = document.getElementById("printable-report-area");
-
     const executeExport = () => {
       const opt = {
         margin:       0.3,
@@ -434,8 +399,7 @@ export default function Laporan() {
           <h1 className="lap-title">Laporan Keuangan</h1>
           <p className="lap-sub">Rekap lengkap pemasukan, pengeluaran, dan laba rugi usaha berbasis real data.</p>
         </div>
-        
-        {/* BUTTON EXPORT PDF BARU */}
+
         <button 
           onClick={handleExportPDF} 
           disabled={isExporting || loading}
@@ -463,8 +427,6 @@ export default function Laporan() {
           {isExporting ? "Memproses PDF..." : "Export PDF"}
         </button>
       </div>
-
-      {/* Wrapper ID Baru untuk area yang akan dicetak ke dalam file PDF */}
       <div id="printable-report-area">
         
         <div className="lap-summary">
@@ -783,8 +745,7 @@ export default function Laporan() {
             </div>
           </div>
         )}
-
-      </div> {/* Akhir dari printable-report-area */}
+      </div>
     </div>
   );
 }

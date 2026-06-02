@@ -3,14 +3,14 @@ const prisma = new PrismaClient();
 
 export const getTransactionSummary = async (req, res) => {
   try {
-    // 1. Amankan userId secara konsisten
+    // Amankan userId secara konsisten
     const userId = req.user?.id || req.user?.userId;
 
     if (!userId) {
       return res.status(401).json({ error: "Akses ditolak. ID Pengguna tidak ditemukan di token!" });
     }
 
-    // 2. Hitung Total Pemasukan berdasarkan userId
+    // Hitung Total Pemasukan berdasarkan userId
     const totalPemasukan = await prisma.transaction.aggregate({
       where: {
         userId: userId,
@@ -21,7 +21,7 @@ export const getTransactionSummary = async (req, res) => {
       }
     });
 
-    // 3. Hitung Total Pengeluaran berdasarkan userId
+    // Hitung Total Pengeluaran berdasarkan userId
     const totalPengeluaran = await prisma.transaction.aggregate({
       where: {
         userId: userId,
@@ -122,7 +122,7 @@ export const deleteTransaction = async (req, res) => {
       return res.status(401).json({ error: "Akses ditolak. Token tidak valid." });
     }
 
-    // Proteksi Keamanan: Pastikan transaksi yang dihapus adalah milik user yang request
+    // Proteksi Keamanan
     const transaction = await prisma.transaction.findFirst({
       where: { id: id, userId: userId }
     });

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "../css/Profile.css";
 
-// ── StatCard ─────────────────────────────────────────────────────────────────
+// StatCard
 function StatCard({ label, value, sub, color }) {
   return (
     <div className="prof-stat-card">
@@ -15,7 +15,7 @@ function StatCard({ label, value, sub, color }) {
   );
 }
 
-// ── Toggle ───────────────────────────────────────────────────────────────────
+// Toggle 
 function Toggle({ checked, onChange }) {
   return (
     <button
@@ -29,7 +29,7 @@ function Toggle({ checked, onChange }) {
   );
 }
 
-// ── Field Input ──────────────────────────────────────────────────────────────
+// Field Input
 function Field({ label, value, onChange, type = "text", readOnly }) {
   return (
     <div className="field-wrap">
@@ -47,7 +47,7 @@ function Field({ label, value, onChange, type = "text", readOnly }) {
   );
 }
 
-// ── Section Header ───────────────────────────────────────────────────────────
+// Section Header
 function SectionHead({ title, desc, action, onAction }) {
   return (
     <div className="section-head">
@@ -62,7 +62,7 @@ function SectionHead({ title, desc, action, onAction }) {
   );
 }
 
-// ── MAIN COMPONENT ───────────────────────────────────────────────────────────
+// MAIN COMPONENT
 export default function ProfilUMKM() {
   const [editMode, setEditMode] = useState(false);
   const [saved, setSaved]       = useState(false);
@@ -96,7 +96,7 @@ export default function ProfilUMKM() {
     ringkasanMingguan: true,
   });
 
-  // ── Fetch profil ─────────────────────────────────────────────────────────
+  // Fetch profil 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!userId) {
@@ -121,7 +121,7 @@ export default function ProfilUMKM() {
     fetchProfile();
   }, [userId]);
 
-  // ── Helper set field ──────────────────────────────────────────────────────
+  // Helper set field
   const setField = (key) => (val) => setForm(f => ({ ...f, [key]: val }));
 
   const handleLogoChange = (e) => {
@@ -174,7 +174,7 @@ export default function ProfilUMKM() {
   reader.readAsDataURL(file);
 };
 
-  // ── Simpan profil ─────────────────────────────────────────────────────────
+  // Simpan profil
   const handleSave = async () => {
     if (!userId) return alert("Sesi login tidak valid!");
     try {
@@ -198,7 +198,7 @@ export default function ProfilUMKM() {
     }
   };
 
-  // ── Warna kategori ────────────────────────────────────────────────────────
+  // Warna kategori
   const kategoriColors = {
     "Kuliner / F&B":    "#16a34a",
     "Perdagangan":      "#2563eb",

@@ -82,17 +82,17 @@ const menuItems = [
 export default function MainLayout() {
   const navigate = useNavigate();
 
-  // 1. State disesuaikan dengan field di Profile.jsx
+  // State disesuaikan dengan field di Profile.jsx
   const [profileData, setProfileData] = useState({
     pemilik: "Memuat...",
     namaToko: "...",
     logoToko: "" 
   });
 
-  // 2. Fetch data dari endpoint yang sama dengan Profile.jsx
+  // Fetch data dari endpoint yang sama dengan Profile.jsx
   const fetchSidebarProfile = async () => {
     const userId = localStorage.getItem("userId");
-    if (!userId) return; // Abaikan jika belum login
+    if (!userId) return;
 
     try {
       const response = await fetch(`http://localhost:5000/api/profile/${userId}`);
@@ -103,7 +103,7 @@ export default function MainLayout() {
         const fetchedPemilik = data.pemilik || "Admin";
         const fetchedToko = data.namaToko || "Toko Anda";
         
-        // Buat inisial otomatis dari nama pemilik (misal Dimas Al Shiddiq jadi DS)
+        // Buat inisial otomatis 
         const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(fetchedPemilik)}&background=2563eb&color=fff`;
         const fetchedLogo = data.logoToko || defaultAvatar;
 
@@ -124,8 +124,6 @@ export default function MainLayout() {
 
     // Listener khusus agar sidebar langsung berubah ketika profil di-save!
     window.addEventListener("profileUpdated", fetchSidebarProfile);
-    
-    // Cleanup listener
     return () => window.removeEventListener("profileUpdated", fetchSidebarProfile);
   }, []);
 
@@ -140,9 +138,7 @@ export default function MainLayout() {
 
   return (
     <div className="layout-wrapper">
-      {/* SIDEBAR */}
       <aside className="sidebar">
-        {/* User Profile */}
         <div className="sidebar-profile">
           <div className="profile-avatar">
             <img src={profileData.logoToko} alt="avatar" />
@@ -153,7 +149,6 @@ export default function MainLayout() {
           </div>
         </div>
 
-        {/* Navigation Menu */}
         <nav className="sidebar-nav">
           {menuItems.map((item) => (
             <NavLink
@@ -169,7 +164,6 @@ export default function MainLayout() {
           ))}
         </nav>
 
-        {/* Bottom Actions */}
         <div className="sidebar-bottom">
           <button 
             className="btn-tambah-transaksi"
@@ -195,7 +189,6 @@ export default function MainLayout() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
       <main className="main-content">
         <Outlet />
       </main>

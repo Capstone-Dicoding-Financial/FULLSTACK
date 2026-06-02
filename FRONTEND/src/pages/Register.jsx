@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../css/register.css";
 
-// ── Icons ────────────────────────────────────────────────────────────────────
 const UserIcon = () => (
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -24,7 +23,6 @@ const LockIcon = () => (
   </svg>
 );
 
-// ── Main Component ───────────────────────────────────────────────────────────
 export default function Register() {
   const navigate = useNavigate();
 
@@ -43,14 +41,11 @@ export default function Register() {
       ...form,
       [e.target.name]: e.target.value,
     });
-    // Reset error pas user mulai ngetik lagi
     if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // 1. Validasi kecocokan password di frontend
     if (form.password !== form.confirmPassword) {
       setError("Password dan Konfirmasi Password tidak sama!");
       return;
@@ -60,14 +55,13 @@ export default function Register() {
       setLoading(true);
       setError("");
 
-      // 2. Hit ke API backend Express.js (Port 5000)
       const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: form.nama, // Di-mapping ke 'name' sesuai struktur database backend pada umumnya
+          name: form.nama,
           email: form.email,
           password: form.password,
         }),
@@ -78,8 +72,6 @@ export default function Register() {
       if (!response.ok) {
         throw new Error(data.message || data.error || "Gagal melakukan registrasi");
       }
-
-      // 3. Jika sukses, langsung arahkan ke halaman login
       alert("Registrasi Berhasil! Silakan masuk menggunakan akun baru Anda.");
       navigate("/login");
 
@@ -93,8 +85,6 @@ export default function Register() {
 
   return (
     <div className="register-page">
-
-      {/* LEFT SIDE */}
       <div className="register-left">
         <div className="overlay"></div>
 
@@ -120,7 +110,7 @@ export default function Register() {
             </div>
 
             <div>
-              <strong>95%</strong> {/* Sedikit adjustment biar masuk akal angka akurasinya bro hehe */}
+              <strong>95%</strong>
               <span>Prediksi Akurat</span>
             </div>
 
@@ -132,10 +122,8 @@ export default function Register() {
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
       <div className="register-right">
         <div className="register-card">
-
           <h2 className="register-title">
             Buat Akun Baru
           </h2>
@@ -144,9 +132,9 @@ export default function Register() {
             Daftar untuk mulai menggunakan DanaUMKM
           </p>
 
-          {/* Banner Error Feedback */}
           {error && (
-            <div className="register-error-banner" style={{
+            <div className="register-error-banner" 
+            style={{
               background: "#fee2e2",
               color: "#ef4444",
               padding: "10px 14px",
@@ -159,7 +147,6 @@ export default function Register() {
               {error}
             </div>
           )}
-
           <form onSubmit={handleSubmit} className="register-form">
 
             <div className="form-group">

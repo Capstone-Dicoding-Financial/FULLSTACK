@@ -4,8 +4,6 @@ import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 
 const prisma = new PrismaClient();
-
-// Konfigurasi Transporter Nodemailer (Membaca Gmail + App Password dari .env)
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -14,7 +12,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// ==================== 1. REGISTER ====================
+// REGISTER
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
   
@@ -33,7 +31,7 @@ export const register = async (req, res) => {
   }
 };
 
-// ==================== 2. LOGIN ====================
+// LOGIN
 export const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -65,7 +63,7 @@ export const login = async (req, res) => {
   }
 };
 
-// ==================== 3. FORGOT PASSWORD ====================
+// FORGOT PASSWORD
 export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -88,7 +86,6 @@ export const forgotPassword = async (req, res) => {
 
     // Link mengarah ke halaman ResetPassword.jsx di frontend (Port 5173)
     const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
-
     const mailOptions = {
       from: '"DanaUMKM Support" <noreply@danaumkm.com>',
       to: email,
@@ -122,7 +119,7 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// ==================== 4. RESET PASSWORD ====================
+// RESET PASSWORD
 export const resetPassword = async (req, res) => {
   const { token, password } = req.body;
 
