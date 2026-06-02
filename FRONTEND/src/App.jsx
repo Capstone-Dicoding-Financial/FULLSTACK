@@ -9,6 +9,7 @@ import Laporan from "./pages/Laporan.jsx";
 import Transaksi from "./pages/Transaksi.jsx";
 import Forecast from "./pages/Forecast.jsx";
 import Profile from "./pages/Profile.jsx";
+import ForgotPassword from "./pages/ForgotPassword";
 
 
 import MainLayout from "./layouts/MainLayout";
@@ -21,6 +22,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Halaman dengan sidebar */}
         <Route element={<MainLayout />}>
@@ -32,7 +34,7 @@ function App() {
           <Route path="/transaksi" element={<Transaksi />} />
           <Route path="/forecast" element={<Forecast />} />
           <Route path="/profile" element={<Profile />} />
-  
+          
         </Route>
       </Routes>
     </BrowserRouter>

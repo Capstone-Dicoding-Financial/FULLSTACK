@@ -390,4 +390,58 @@
   .login-form-wrap {
     max-width: 100%;
   }
+
+/* ════════════════════════════
+   TAMBAHKAN DI BAGIAN BAWAH login.css
+════════════════════════════ */
+
+/* ── Forgot Password: lock icon wrap ── */
+.fp-icon-wrap {
+  width: 72px;
+  height: 72px;
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* ── Success state container ── */
+.fp-success {
+  display: flex;
+  flex-direction: column;
+}
+
+.fp-success__icon {
+  width: 80px;
+  height: 80px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* ── Info box (expiry notice) ── */
+.fp-info-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #1e40af;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.fp-info-box svg {
+  flex-shrink: 0;
+}
 }

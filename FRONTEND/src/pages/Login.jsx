@@ -179,7 +179,6 @@ export default function Login() {
                 <span className="checkbox-custom" />
                 <span className="checkbox-text">Ingat saya</span>
               </label>
-              <a href="#" className="forgot-link">Lupa Password?</a>
             </div>
 
             {/* Submit */}
