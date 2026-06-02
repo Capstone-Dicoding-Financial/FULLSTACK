@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authroutes.js';
-import transactionRoutes from './routes/transactionRoutes.js';
-import profileRoutes from './routes/profileRoutes.js';
+import transactionRoutes from './routes/transactionroutes.js';
+import profileRoutes from './routes/profileroutes.js';
 import predictRoutes from './routes/predictroutes.js';
 import { swaggerSpec } from './utils/swagger.js';
 import swaggerUi from 'swagger-ui-express';
