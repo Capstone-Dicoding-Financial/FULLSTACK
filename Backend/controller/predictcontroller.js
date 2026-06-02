@@ -20,6 +20,7 @@ export const getCashflowPrediction = async (req, res) => {
 
     // 3. Ubah URL endpoint dari /predict menjadi /forecast
     const apiResponse = await axios.post('https://skys0o-umkm-cashflow-prediction.hf.space/predict', payload);
+    const apiResponse = await axios.post(`${aiBaseUrl}/forecast`, payload);
 
     const aiResult = apiResponse.data;
 
