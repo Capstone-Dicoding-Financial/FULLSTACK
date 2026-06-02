@@ -2,11 +2,8 @@ import axios from 'axios';
 
 export const getCashflowPrediction = async (req, res) => {
   try {
-    // DATA BACKUP/FALLBACK (Gunakan data riil DB jika query sudah siap)
-    // Sembari pengujian, kita sediakan data dummy yang strukturnya pas dengan kebutuhan model GRU
     let cashflowHistory = [120000, 150000, 180000, 210000, -50000, 250000, 280000, 300000, -20000, 350000];
-    
-    // Potong 7 hari terakhir untuk kebutuhan input window GRU
+
     let cashflowLast7Days = cashflowHistory.slice(-7);
 
     const payload = {
@@ -18,17 +15,13 @@ export const getCashflowPrediction = async (req, res) => {
       total_expense: 840000                
     };
 
-    // 3. Ubah URL endpoint dari /predict menjadi /forecast
-    const apiResponse = await axios.post('https://skys0o-umkm-cashflow-prediction.hf.space/predict', payload);
+    const aiBaseUrl = process.env.PYTHON_AI_URL || 'http://localhost:8000';
     const apiResponse = await axios.post(`${aiBaseUrl}/forecast`, payload);
-
     const aiResult = apiResponse.data;
-
-    // 4. Gunakan properti camelCase (chartActual & chartPred)
+    
     const chartActual = aiResult.chartActual.map(item => ({ x: item[0], y: item[1] }));
     const chartPred = aiResult.chartPred.map(item => ({ x: item[0], y: item[1] }));
 
-    // 5. Kembalikan respon matang ke Front-End React
     return res.json({
       success: true,
       historis: chartActual,
