@@ -1,56 +1,151 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "../css/dashboard.css";
 
-function SparklineChart() {
-  const points = [
-    { x: 0, y: 80 }, { x: 40, y: 65 }, { x: 80, y: 72 }, { x: 120, y: 50 },
-    { x: 160, y: 60 }, { x: 200, y: 40 }, { x: 240, y: 55 }, { x: 280, y: 35 },
-    { x: 320, y: 45 }, { x: 360, y: 30 }, { x: 380, y: 38 },
-  ];
+// ── 1. KOMPONEN SPARKLINE CHART (RIIL DATA MODEL GRU) ───────────────────────
+function SparklineChart({ kasHistoris, kasPrediksi }) {
+  const dataHistori = kasHistoris || [];
+  const dataMasaDepan = kasPrediksi || [];
 
-  const projected = [
-    { x: 380, y: 38 }, { x: 420, y: 28 }, { x: 460, y: 20 }, { x: 500, y: 25 },
-    { x: 540, y: 15 }, { x: 580, y: 18 }, { x: 620, y: 10 },
-  ];
+  if (dataHistori.length === 0 && dataMasaDepan.length === 0) {
+    return <div style={{ color: "#94a3b8", fontSize: "13px", padding: "20px 0" }}>Menghitung proyeksi grafik model AI...</div>;
+  }
 
-  const toPath = (pts) => pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-  const toArea = (pts) => `${toPath(pts)} L ${pts[pts.length - 1].x} 100 L ${pts[0].x} 100 Z`;
+  // Acuan batas X dan Y dari gabungan KEDUA data asli
+  const semuaPoin = [...dataHistori, ...dataMasaDepan];
+  const xValues = semuaPoin.map((p) => p.x);
+  const yValues = semuaPoin.map((p) => p.y);
+
+  const minX = Math.min(...xValues);
+  const maxX = Math.max(...xValues);
+  
+  const realMinY = Math.min(...yValues);
+  const realMaxY = Math.max(...yValues);
+
+  // Berikan padding visual 15% atas-bawah agar grafik tidak menabrak border SVG
+  const selisihY = realMaxY - realMinY;
+  const minY = realMinY - (selisihY === 0 ? 10000 : selisihY * 0.15);
+  const maxY = realMaxY + (selisihY === 0 ? 10000 : selisihY * 0.15);
+
+  const chartWidth = 540; 
+  const svgWidth = 640;
+  const svgHeight = 110;
+
+  // Fungsi konversi nilai asli ke koordinat piksel SVG menggunakan acuan global
+  const hitungKoordinat = (pts) => {
+    return pts.map((p) => {
+      const xNorm = maxX === minX ? 0 : ((p.x - minX) / (maxX - minX)) * chartWidth;
+      const yNorm = maxY === minY ? svgHeight / 2 : svgHeight - ((p.y - minY) / (maxY - minY)) * svgHeight;
+      return { x: xNorm, y: yNorm };
+    });
+  };
+
+  const koordinatHistori = hitungKoordinat(dataHistori);
+  const koordinatPrediksi = hitungKoordinat(dataMasaDepan);
+
+  const toPath = (pts) => pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const toArea = (pts) => {
+    if (pts.length === 0) return "";
+    return `${toPath(pts)} L ${pts[pts.length - 1].x.toFixed(1)} ${svgHeight} L ${pts[0].x.toFixed(1)} ${svgHeight} Z`;
+  };
+
+  // Titik pertemuan ujung grafik histori dan awal grafik prediksi (Hari Ini)
+  const titikHariIni = koordinatHistori[koordinatHistori.length - 1] || { x: 360, y: 50 };
+
+  // Format label angka rupiah terlokalisasi Indonesia di sumbu Y (Jt / Rb)
+  const formatK = (num) => {
+    const nilaiMutlak = Math.abs(num);
+    if (nilaiMutlak >= 1000000) return (num / 1000000).toFixed(1) + " Jt";
+    if (nilaiMutlak >= 1000) return (num / 1000).toFixed(0) + " Rb";
+    return num.toFixed(0);
+  };
+
+  const nilaiGrid = [
+    realMaxY,
+    realMinY + (realMaxY - realMinY) / 2,
+    realMinY
+  ];
 
   return (
-    <div className="chart-container">
-      <div className="chart-label-today">Hari ini</div>
-      <svg viewBox="0 0 640 110" preserveAspectRatio="none" className="sparkline-svg">
+    <div className="chart-container" style={{ position: "relative" }}>
+      {/* Label Hari Ini */}
+      <div 
+        className="chart-label-today" 
+        style={{ 
+          left: `${(titikHariIni.x / svgWidth) * 100}%`,
+          top: `${titikHariIni.y - 25}px`,
+          color: "white"
+        }}
+      >
+        Hari ini
+      </div>
+
+      <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="none" className="sparkline-svg" style={{ overflow: "visible" }}>
         <defs>
           <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.18" />
-            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.01" />
+            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.00" />
           </linearGradient>
           <linearGradient id="projGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.01" />
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.10" />
+            <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.00" />
           </linearGradient>
         </defs>
-        <path d={toArea(points)} fill="url(#areaGrad)" />
-        <path d={toArea(projected)} fill="url(#projGrad)" />
-        <path d={toPath(points)} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
-        <path d={toPath(projected)} fill="none" stroke="#93c5fd" strokeWidth="2" strokeDasharray="6 4" strokeLinecap="round" />
-        <circle cx="380" cy="38" r="5" fill="#ffffff" stroke="#2563eb" strokeWidth="2.5" />
+        
+        {/* Render Garis Pandu & Label Sumbu Y */}
+        {nilaiGrid.map((val, index) => {
+          const yPos = maxY === minY ? svgHeight / 2 : svgHeight - ((val - minY) / (maxY - minY)) * svgHeight;
+          return (
+            <g key={index}>
+              <line x1="0" y1={yPos} x2={chartWidth} y2={yPos} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 4" />
+              <text x={chartWidth + 12} y={yPos + 4} fill="#94a3b8" fontSize="10px" fontFamily="sans-serif" textAnchor="start">
+                {formatK(val)}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Isi Gradasi Area Bawah Garis */}
+        {koordinatHistori.length > 0 && <path d={toArea(koordinatHistori)} fill="url(#areaGrad)" />}
+        {koordinatPrediksi.length > 0 && <path d={toArea(koordinatPrediksi)} fill="url(#projGrad)" />}
+        
+        {/* Garis Realisasi Historis (Biru) */}
+        {koordinatHistori.length > 0 && (
+          <path d={toPath(koordinatHistori)} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        )}
+        
+        {/* Garis Proyeksi 30 Hari Kedepan GRU (Putus-putus) */}
+        {koordinatPrediksi.length > 0 && (
+          <path d={toPath(koordinatPrediksi)} fill="none" stroke="#93c5fd" strokeWidth="2" strokeDasharray="6 4" strokeLinecap="round" strokeLinejoin="round" />
+        )}
+        
+        {/* Bulatan Anchor di Titik Hari Ini */}
+        <circle cx={titikHariIni.x} cy={titikHariIni.y} r="5" fill="#ffffff" stroke="#2563eb" strokeWidth="2.5" />
       </svg>
     </div>
   );
 }
 
+// ── 2. HALAMAN UTAMA DASHBOARD ──────────────────────────────────────────────
 export default function Dashboard() {
-  const [summary, setSummary] = useState({ totalIncome: 0, totalExpense: 0, balance: 0 });
+  const navigate = useNavigate();
+  // Inisialisasi sesuai dengan variabel penampung dari backend
+  const [summary, setSummary] = useState({ saldoKas: 0, pemasukan: 0, pengeluaran: 0 });
   const [transaksiList, setTransaksiList] = useState([]);
+  
+  // State data murni dari Model AI
+  const [aiChartData, setAiChartData] = useState({ historis: [], prediksi: [] });
+  const [aiInsights, setAiInsights] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const formatRupiah = (angka) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       maximumFractionDigits: 0,
-    }).format(angka);
+    }).format(angka || 0);
   };
 
   const formatTanggal = (stringTanggal) => {
@@ -67,20 +162,47 @@ export default function Dashboard() {
           Authorization: `Bearer ${token}`, 
         };
 
-        const [resSummary, resTrx] = await Promise.all([
+        // Ambil data finansial dasar dan data AI secara paralel
+        const [resSummary, resTrx, resAI] = await Promise.all([
           fetch("http://localhost:5000/api/transactions/summary", { headers }),
           fetch("http://localhost:5000/api/transactions", { headers }),
+          fetch("http://localhost:5000/api/predict/cashflow", { headers })
         ]);
 
         if (!resSummary.ok || !resTrx.ok) {
-          throw new Error("Gagal mengambil data dari server");
+          throw new Error("Gagal mengambil data dari server database");
         }
 
         const dataSummary = await resSummary.json();
         const dataTrx = await resTrx.json();
 
-        if (dataSummary.success) setSummary(dataSummary.data);
-        if (dataTrx.transactions) setTransaksiList(dataTrx.transactions.slice(0, 3));
+        // 🔄 PERBAIKAN 1: Ambil objek 'summary' sesuai kiriman backend
+        if (dataSummary.summary) {
+          setSummary(dataSummary.summary);
+        }
+
+        // 🔄 PERBAIKAN 2: Ambil dari dataTrx.data karena backend mengirim properti '.data'
+        const daftarTransaksi = dataTrx.data || dataTrx.transactions;
+        if (daftarTransaksi && Array.isArray(daftarTransaksi)) {
+          const dataTerbaru = [...daftarTransaksi]
+            .sort((a, b) => new Date(b.date) - new Date(a.date)) 
+            .slice(0, 5);
+          setTransaksiList(dataTerbaru);
+        }
+
+        // Pengolahan data dari model GRU asli
+        if (resAI && resAI.ok) {
+          const dataAI = await resAI.json();
+          if (dataAI.success) {
+            setAiChartData({
+              historis: dataAI.historis,
+              prediksi: dataAI.prediksi
+            });
+            setAiInsights(dataAI.insights);
+          }
+        } else {
+          throw new Error("Koneksi model AI terputus. Pastikan main.py FastAPI Anda aktif!");
+        }
         
         setLoading(false);
       } catch (err) {
@@ -92,11 +214,12 @@ export default function Dashboard() {
     fetchDataDashboard();
   }, []);
 
-  if (loading) return <div className="loading-state">Memuat data dashboard...</div>;
-  if (error) return <div className="error-state">Error: {error}</div>;
+  if (loading) return <div className="loading-state">Memuat kecerdasan buatan model GRU...</div>;
+  if (error) return <div className="error-state" style={{ color: "#ef4444", fontWeight: "600" }}>Error: {error}</div>;
 
   return (
     <div className="dashboard-page">
+      {/* TOPBAR */}
       <div className="dashboard-topbar">
         <div>
           <h1 className="dashboard-title">Dashboard</h1>
@@ -111,8 +234,10 @@ export default function Dashboard() {
         </button>
       </div>
 
+      {/* DASHBOARD BODY */}
       <div className="dashboard-body">
         <div className="dashboard-left">
+          {/* STATS CARDS */}
           <div className="summary-cards">
             <div className="card card-kas">
               <div className="card-header">
@@ -124,7 +249,8 @@ export default function Dashboard() {
                   </svg>
                 </span>
               </div>
-              <div className="card-amount">{formatRupiah(summary.balance)}</div>
+              {/* 🔄 PERBAIKAN: disesuaikan dengan key 'saldoKas' dari backend */}
+              <div className="card-amount">{formatRupiah(summary.saldoKas)}</div>
               <div className="card-trend trend-up">↗ Update otomatis</div>
             </div>
 
@@ -138,7 +264,8 @@ export default function Dashboard() {
                   </svg>
                 </span>
               </div>
-              <div className="card-amount">{formatRupiah(summary.totalIncome)}</div>
+              {/* 🔄 PERBAIKAN: disesuaikan dengan key 'pemasukan' dari backend */}
+              <div className="card-amount">{formatRupiah(summary.pemasukan)}</div>
               <div className="card-trend trend-up">↗ Berhasil dirangkum</div>
             </div>
 
@@ -152,26 +279,29 @@ export default function Dashboard() {
                   </svg>
                 </span>
               </div>
-              <div className="card-amount">{formatRupiah(summary.totalExpense)}</div>
+              {/* 🔄 PERBAIKAN: disesuaikan dengan key 'pengeluaran' dari backend */}
+              <div className="card-amount">{formatRupiah(summary.pengeluaran)}</div>
               <div className="card-trend trend-down">↘ Batas pengeluaran aman</div>
             </div>
           </div>
 
+          {/* AI GRAPH PREDIKSI */}
           <div className="chart-card">
             <div className="chart-card-header">
               <div>
                 <h2 className="chart-title">Prediksi Arus Kas (AI)</h2>
-                <p className="chart-desc">Proyeksi 30 hari ke depan berdasarkan tren historis.</p>
+                <p className="chart-desc">Proyeksi 30 hari ke depan berdasarkan model GRU TensorFlow.</p>
               </div>
-              <span className="chart-badge">30 Hari</span>
+              <span className="chart-badge" style={{ backgroundColor: "#10b981", color: "white" }}>Model GRU Aktif</span>
             </div>
-            <SparklineChart />
+            <SparklineChart kasHistoris={aiChartData.historis} kasPrediksi={aiChartData.prediksi} />
           </div>
 
+          {/* TABLE TRANSAKSI TERAKHIR */}
           <div className="transaksi-card">
             <div className="transaksi-header">
               <h2 className="section-title">Transaksi Terakhir</h2>
-              <button className="lihat-semua-btn">Lihat Semua</button>
+              <button className="lihat-semua-btn" onClick={() => navigate("/transaksi")}>Lihat Semua</button>
             </div>
             <table className="transaksi-table">
               <thead>
@@ -209,34 +339,30 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* SIDEBAR SEBELAH KANAN - INSIGHTS CERDAS MODEL GRU */}
         <div className="dashboard-right">
           <div className="insights-card">
             <div className="insights-header">
               <h2 className="insights-title">Insights Cerdas</h2>
             </div>
             <p className="insights-desc">
-              Sistem AI kami mendeteksi pola pada keuangan toko Anda minggu ini.
+              Hasil analisis pola keuangan toko Anda langsung dari model AI neural network.
             </p>
 
-            <div className="insight-item insight-positive">
-              <div className="insight-item-header">
-                <span className="insight-badge insight-badge-green">↗ Potensi Penjualan Tinggi</span>
+            {aiInsights.map((insight) => (
+              <div key={insight.id} className={`insight-item ${insight.type === "positive" ? "insight-positive" : "insight-warning"}`}>
+                <div className="insight-item-header">
+                  <span className={`insight-badge ${insight.type === "positive" ? "insight-badge-green" : "insight-badge-yellow"}`}>
+                    {insight.badge}
+                  </span>
+                </div>
+                <p>{insight.text}</p>
               </div>
-              <p>
-                Akhir pekan ini diprediksi ada lonjakan pembeli 20% berdasarkan tren gajian akhir bulan.
-              </p>
-            </div>
+            ))}
 
-            <div className="insight-item insight-warning">
-              <div className="insight-item-header">
-                <span className="insight-badge insight-badge-yellow">⚠ Awas Stok Menipis</span>
-              </div>
-              <p>
-                Pengeluaran untuk Bahan Baku A lebih rendah dari rata-rata. Cek inventaris agar tidak kehabisan saat ramai.
-              </p>
-            </div>
-
-            <button className="btn-detail-ai">Lihat Detail Laporan AI</button>
+            <button className="btn-detail-ai" onClick={() => navigate("/ai-insights")}>
+              Lihat Detail Laporan AI
+            </button>
           </div>
         </div>
       </div>

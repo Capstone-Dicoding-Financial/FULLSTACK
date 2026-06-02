@@ -3,9 +3,7 @@ import "../css/Transaksi.css";
 
 const KATEGORI_PEMASUKAN  = ["Penjualan Produk", "Jasa Layanan", "Lain-lain"];
 const KATEGORI_PENGELUARAN = ["Bahan Baku", "Gaji Karyawan", "Sewa Tempat", "Listrik & Air", "Operasional", "Lain-lain"];
-
 const formatRp = (n) => "Rp " + (n || 0).toLocaleString("id-ID");
-
 const formatTanggal = (str) => {
   if (!str) return "-";
   return new Date(str).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
@@ -20,122 +18,129 @@ const toDisplay = (str) => {
 function StatCard({ label, value, sub, valueClass }) {
   return (
     <div className="stat-card">
-      <p className="stat-card__label">{label}</p>
-      <p className={`stat-card__value ${valueClass ?? ""}`}>{value}</p>
-      {sub && <p className="stat-card__sub">{sub}</p>}
+      <div className="stat-card__info">
+        <p className="stat-card__label">{label}</p>
+        <p className={`stat-card__value ${valueClass ?? ""}`}>{value}</p>
+        {sub && <p className="stat-card__sub">{sub}</p>}
+      </div>
     </div>
   );
 }
 
 function TransaksiModal({ onClose, onSave }) {
-  const [form, setForm] = useState({
-    type: "INCOME",
-    amount: "",
-    date: new Date().toISOString().split("T")[0],
-    category: KATEGORI_PEMASUKAN[0],
-    description: "",
-  });
+  const [type, setType] = useState("INCOME");
+  const [amountRaw, setAmountRaw] = useState("");
+  const [category, setCategory] = useState(KATEGORI_PEMASUKAN[0]);
+  const [description, setDescription] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  const setField = (k, v) =>
-    setForm((prev) => {
-      const next = { ...prev, [k]: v };
-      if (k === "type")
-        next.category = v === "INCOME" ? KATEGORI_PEMASUKAN[0] : KATEGORI_PENGELUARAN[0];
-      return next;
-    });
-
-  const handleSubmit = () => {
-    if (!form.amount || !form.date || !form.description.trim()) {
-      alert("Harap isi semua kolom yang wajib (*).");
-      return;
-    }
-    onSave({ ...form, amount: toNumber(form.amount) });
+  const handleTypeChange = (t) => {
+    setType(t);
+    setCategory(t === "INCOME" ? KATEGORI_PEMASUKAN[0] : KATEGORI_PENGELUARAN[0]);
   };
 
-  const kategoriList = form.type === "INCOME" ? KATEGORI_PEMASUKAN : KATEGORI_PENGELUARAN;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const cleanAmount = toNumber(amountRaw);
+    if (!cleanAmount) return alert("Masukkan nominal transaksi!");
+    onSave({ type, amount: cleanAmount, category, description, date });
+  };
 
   return (
     <div className="modal-overlay">
       <div className="modal-box">
-        <div className="modal-header">
-          <h2 className="modal-header__title">Tambah Transaksi Baru</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
-        </div>
+        <h3 className="modal-title">Tambah Transaksi Baru</h3>
+        <form onSubmit={handleSubmit}>
+          
+          <div className="form-group">
+            <label>Jenis Transaksi</label>
+            <div className="radio-group" style={{ display: "flex", gap: "16px", marginTop: "4px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                <input
+                  type="radio"
+                  name="type"
+                  checked={type === "INCOME"}
+                  onChange={() => handleTypeChange("INCOME")}
+                />
+                Pemasukan
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+                <input
+                  type="radio"
+                  name="type"
+                  checked={type === "EXPENSE"}
+                  onChange={() => handleTypeChange("EXPENSE")}
+                />
+                Pengeluaran
+              </label>
+            </div>
+          </div>
 
-        <div className="jenis-toggle">
-          {[
-            { key: "INCOME", label: "Pemasukan" },
-            { key: "EXPENSE", label: "Pengeluaran" },
-          ].map((j) => (
-            <button
-              key={j.key}
-              className={`jenis-toggle__btn ${form.type === j.key ? "jenis-toggle__btn--active" : ""}`}
-              onClick={() => setField("type", j.key)}
-            >
-              {j.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="form-grid-2">
-          <div className="form-group" style={{ margin: 0 }}>
-            <label>Jumlah (Rp) *</label>
+          <div className="form-group">
+            <label>Nominal (Rp)</label>
             <input
               type="text"
-              placeholder="5.000.000"
-              value={toDisplay(form.amount)}
-              onChange={(e) => setField("amount", e.target.value.replace(/\D/g, ""))}
+              placeholder="Contoh: 50.000"
+              value={amountRaw}
+              onChange={(e) => setAmountRaw(toDisplay(e.target.value))}
+              required
             />
           </div>
-          <div className="form-group" style={{ margin: 0 }}>
-            <label>Tanggal *</label>
+
+          <div className="form-group">
+            <label>Kategori</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)}>
+              {(type === "INCOME" ? KATEGORI_PEMASUKAN : KATEGORI_PENGELUARAN).map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Tanggal</label>
             <input
               type="date"
-              value={form.date}
-              onChange={(e) => setField("date", e.target.value)}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
             />
           </div>
-        </div>
 
-        <div className="form-group">
-          <label>Kategori</label>
-          <select value={form.category} onChange={(e) => setField("category", e.target.value)}>
-            {kategoriList.map((k) => <option key={k}>{k}</option>)}
-          </select>
-        </div>
+          <div className="form-group">
+            <label>Keterangan / Deskripsi</label>
+            <textarea
+              rows="3"
+              placeholder="Catatan tambahan (opsional)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
 
-        <div className="form-group">
-          <label>Keterangan *</label>
-          <textarea
-            placeholder="Contoh: Penjualan harian silky pudding rasa cokelat"
-            value={form.description}
-            onChange={(e) => setField("description", e.target.value)}
-          />
-        </div>
-
-        <div className="modal-footer">
-          <button className="btn-cancel" onClick={onClose}>Batal</button>
-          <button className="btn-save" onClick={handleSubmit}>Simpan Transaksi</button>
-        </div>
+          <div className="modal-actions" style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "16px" }}>
+            <button type="button" className="btn-outline" onClick={onClose}>
+              Batal
+            </button>
+            <button type="submit" className="btn-primary-custom">
+              Simpan
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 }
 
 export default function Transaksi() {
-  const [searchTerm, setSearchTerm] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [showModal, setShowModal]       = useState(false);
-  const [search, setSearch]             = useState("");
-  const [filterJenis, setFilterJenis]   = useState("Semua");
-  const [filterKategori, setFilterKategori] = useState("Semua");
-  
-  // 🟢 1. State Baru untuk Pagination
-  const [currentPage, setCurrentPage]   = useState(1);
-  const ITEMS_PER_PAGE = 10; // Silakan ganti jadi 15 jika dirasa kurang banyak
-
+  const [error, setError] = useState(null);
+  const [filterType, setFilterType] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [showModal, setShowModal] = useState(false);
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -151,10 +156,8 @@ export default function Transaksi() {
         headers: getAuthHeaders(),
       });
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.error || "Gagal mengambil data transaksi");
-
-      setTransactions(data.transactions || []);
+      setTransactions(data.data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -166,59 +169,6 @@ export default function Transaksi() {
     fetchTransactions();
   }, []);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, filterJenis, filterKategori]);
-
-  const totalPemasukan   = transactions.filter((t) => t.type === "INCOME").reduce((s, t) => s + t.amount, 0);
-  const totalPengeluaran = transactions.filter((t) => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0);
-  const allKategori = ["Semua", ...new Set(transactions.map((t) => t.category))];
-
-  const filtered = useMemo(() => {
-  return [...transactions].sort((a, b) => {
-    return new Date(b.date) - new Date(a.date);
-  }).filter((t) => {
-    return t.description.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-}, [transactions, searchTerm]);
-
-  const paginatedTransactions = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filtered, currentPage]);
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
-
-  const handleExportCSV = () => {
-    if (filtered.length === 0) {
-      alert("Tidak ada data transaksi yang bisa diekspor.");
-      return;
-    }
-
-    const headers = ["Tanggal", "Keterangan", "Kategori", "Jenis", "Jumlah (Rp)"];
-    
-    const rows = filtered.map((t) => [
-      t.date ? new Date(t.date).toISOString().split("T")[0] : "-",
-      `"${(t.description || "").replace(/"/g, '""')}"`,
-      t.category,
-      t.type === "INCOME" ? "Pemasukan" : "Pengeluaran",
-      t.amount,
-    ]);
-
-    const csvContent = [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Laporan_Transaksi_${new Date().toISOString().split("T")[0]}.csv`);
-    link.style.visibility = "hidden";
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   const handleSave = async (payload) => {
     try {
       const response = await fetch("http://localhost:5000/api/transactions", {
@@ -226,12 +176,12 @@ export default function Transaksi() {
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
       });
+      const data = await response.json();
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Gagal menambahkan transaksi");
+      if (!response.ok) throw new Error(data.error || "Gagal menyimpan transaksi");
 
-      fetchTransactions();
       setShowModal(false);
+      fetchTransactions();
     } catch (err) {
       alert(err.message);
     }
@@ -239,15 +189,14 @@ export default function Transaksi() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) return;
-
     try {
       const response = await fetch(`http://localhost:5000/api/transactions/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
+      const data = await response.json();
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Gagal menghapus transaksi");
+      if (!response.ok) throw new Error(data.error || "Gagal menghapus transaksi");
 
       fetchTransactions();
     } catch (err) {
@@ -255,95 +204,159 @@ export default function Transaksi() {
     }
   };
 
-  if (loading && transactions.length === 0) return <div className="loading-state" style={{ padding: "40px", textAlign: "center" }}>Memuat data transaksi...</div>;
-  if (error) return <div className="error-state" style={{ padding: "40px", color: "red", textAlign: "center" }}>⚠️ Error: {error}</div>;
+  const stats = useMemo(() => {
+    let income = 0;
+    let expense = 0;
+    transactions.forEach((t) => {
+      if (t.type === "INCOME") income += t.amount;
+      else if (t.type === "EXPENSE") expense += t.amount;
+    });
+    return {
+      totalIncome: income,
+      totalExpense: expense,
+      balance: income - expense,
+    };
+  }, [transactions]);
 
-  const startNumber = filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const endNumber = Math.min(currentPage * ITEMS_PER_PAGE, filtered.length);
+  const filtered = useMemo(() => {
+    return transactions.filter((t) => {
+      const matchesType = filterType === "ALL" || t.type === filterType;
+      const cleanQuery = searchQuery.toLowerCase();
+      const matchesSearch =
+        (t.category || "").toLowerCase().includes(cleanQuery) ||
+        (t.description || "").toLowerCase().includes(cleanQuery);
+      return matchesType && matchesSearch;
+    });
+  }, [transactions, filterType, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, searchQuery]);
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtered.slice(start, start + itemsPerPage);
+  }, [filtered, currentPage]);
+
+  const startNumber = filtered.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endNumber = Math.min(currentPage * itemsPerPage, filtered.length);
+
+  if (loading) return <div style={{ padding: "24px", color: "#6b7280" }}>Mendata riwayat finansial...</div>;
+  if (error) return <div style={{ padding: "24px", color: "#ef4444", fontWeight: "bold" }}>Error: {error}</div>;
 
   return (
     <div className="transaksi-page">
       <div className="transaksi-header">
         <div>
-          <h1 className="transaksi-header__title">Transaksi</h1>
-          <p className="transaksi-header__sub">Catat &amp; kelola semua pemasukan dan pengeluaran</p>
+          <h1 className="transaksi-header__title">Arus Keuangan</h1>
+          <p className="transaksi-header__sub">Kelola seluruh riwayat pemasukan dan pengeluaran toko Anda di sini.</p>
         </div>
         <div className="transaksi-header__actions">
-          <button className="btn-outline" onClick={handleExportCSV}>Export CSV</button>
-          <button className="btn-primary" onClick={() => setShowModal(true)}>
+          <button className="btn-primary-custom" onClick={() => setShowModal(true)}>
             + Tambah Transaksi
           </button>
         </div>
       </div>
 
-      <div className="stat-grid">
-        <StatCard label="Pemasukan" value={formatRp(totalPemasukan)} sub="Total Akumulasi" valueClass="stat-card__value--green" />
-        <StatCard label="Pengeluaran" value={formatRp(totalPengeluaran)} sub="Total Akumulasi" valueClass="stat-card__value--red" />
-        <StatCard label="Sisa Saldo" value={formatRp(totalPemasukan - totalPengeluaran)} sub="Arus Kas Bersih" valueClass={(totalPemasukan - totalPengeluaran) >= 0 ? "stat-card__value--green" : "stat-card__value--red"} />
+      <div className="stat-row">
+        <StatCard
+          label="Total Pemasukan"
+          value={formatRp(stats.totalIncome)}
+          sub={`${transactions.filter((t) => t.type === "INCOME").length} item masuk`}
+          valueClass="text-green"
+        />
+        <StatCard
+          label="Total Pengeluaran"
+          value={formatRp(stats.totalExpense)}
+          sub={`${transactions.filter((t) => t.type === "EXPENSE").length} pengeluaran`}
+          valueClass="text-red"
+        />
+        <StatCard
+          label="Sisa Saldo Kas"
+          value={formatRp(stats.balance)}
+          sub="Sisa dana bersih"
+          valueClass={stats.balance >= 0 ? "text-blue" : "text-red"}
+        />
       </div>
 
-      <div className="table-card">
-        <div className="table-card__header">
-          <span className="table-card__title">Riwayat Transaksi</span>
-          <div className="table-card__controls">
-            <div className="search-wrap">
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Cari transaksi..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-        
-            <select className="filter-select" value={filterJenis} onChange={(e) => setFilterJenis(e.target.value)}>
-              <option value="Semua">Semua Jenis</option>
-              <option value="pemasukan">Pemasukan</option>
-              <option value="pengeluaran">Pengeluaran</option>
-            </select>
+      <div className="table-card" style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", border: "0.5px solid #e2e8f0" }}>
+        <div className="table-controls" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", gap: "16px", flexWrap: "wrap" }}>
+          <div className="filter-tabs" style={{ display: "flex", gap: "8px" }}>
+            <button
+              className={`btn-outline ${filterType === "ALL" ? "active" : ""}`}
+              style={{ background: filterType === "ALL" ? "#2d6ef7" : "#fff", color: filterType === "ALL" ? "#fff" : "#374151" }}
+              onClick={() => setFilterType("ALL")}
+            >
+              Semua ({transactions.length})
+            </button>
+            <button
+              className={`btn-outline ${filterType === "INCOME" ? "active" : ""}`}
+              style={{ background: filterType === "INCOME" ? "#10b981" : "#fff", color: filterType === "INCOME" ? "#fff" : "#374151" }}
+              onClick={() => setFilterType("INCOME")}
+            >
+              Pemasukan
+            </button>
+            <button
+              className={`btn-outline ${filterType === "EXPENSE" ? "active" : ""}`}
+              style={{ background: filterType === "EXPENSE" ? "#ef4444" : "#fff", color: filterType === "EXPENSE" ? "#fff" : "#374151" }}
+              onClick={() => setFilterType("EXPENSE")}
+            >
+              Pengeluaran
+            </button>
+          </div>
 
-            <select className="filter-select" value={filterKategori} onChange={(e) => setFilterKategori(e.target.value)}>
-              {allKategori.map((k) => <option key={k}>{k}</option>)}
-            </select>
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Cari kategori atau keterangan..."
+              className="search-input"
+              style={{ padding: "8px 14px", border: "0.5px solid #d1d5db", borderRadius: "8px", fontSize: "13px", minWidth: "240px", outline: "none" }}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
+        <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
                 <th>Tanggal</th>
-                <th>Keterangan</th>
-                <th>Kategori</th>
                 <th>Jenis</th>
-                <th className="align-right">Jumlah</th>
-                <th className="align-center">Aksi</th>
+                <th>Kategori</th>
+                <th>Keterangan</th>
+                <th style={{ textAlign: "right" }}>Nominal</th>
+                <th style={{ textAlign: "center" }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedTransactions.length === 0 ? (
+              {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="table-empty">Tidak ada transaksi yang cocok.</td>
+                  <td colSpan="6" className="table-empty" style={{ textAlign: "center", padding: "32px", color: "#94a3b8" }}>
+                    Tidak ada transaksi yang cocok.
+                  </td>
                 </tr>
               ) : (
-                // 🟢 4. Render Menggunakan Data Paginated
-                paginatedTransactions.map((t) => (
+                paginatedData.map((t) => (
                   <tr key={t.id}>
-                    <td style={{ color: "#6b7280" }}>{formatTanggal(t.date)}</td>
-                    <td>{t.description}</td>
-                    <td><span className="cat-tag">{t.category}</span></td>
+                    <td className="font-medium text-slate-700">{formatTanggal(t.date)}</td>
                     <td>
-                      <span className={`badge ${t.type === "INCOME" ? "badge--in" : "badge--out"}`}>
+                      <span className={`badge ${t.type === "INCOME" ? "badge-green" : "badge-red"}`}>
                         {t.type === "INCOME" ? "Pemasukan" : "Pengeluaran"}
                       </span>
                     </td>
-                    <td className={`align-right ${t.type === "INCOME" ? "amount--in" : "amount--out"}`}>
-                      {t.type === "INCOME" ? "+" : "−"} {formatRp(t.amount)}
+                    <td className="text-slate-600 font-medium">{t.category}</td>
+                    <td className="text-slate-400 max-w-xs truncate" style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {t.description || "-"}
                     </td>
-                    <td className="align-center">
-                      <button 
-                        className="action-btn action-btn--delete" 
-                        style={{ color: "#dc2626", border: "none", background: "none", cursor: "pointer", fontWeight: "500" }}
+                    <td className={`table-amount ${t.type === "INCOME" ? "text-green" : "text-red"}`} style={{ fontWeight: "700", textAlign: "right" }}>
+                      {t.type === "INCOME" ? "+ " : "- "} {formatRp(t.amount)}
+                    </td>
+                    <td style={{ textAlign: "center" }}>
+                      <button
+                        className="btn-delete"
+                        style={{ padding: "4px 10px", background: "#fef2f2", color: "#ef4444", border: "0.5px solid #fee2e2", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}
                         onClick={() => handleDelete(t.id)}
                       >
                         Hapus
@@ -356,16 +369,16 @@ export default function Transaksi() {
           </table>
         </div>
 
-        {/* 🟢 5. Desain Footer & Tombol Navigasi Pagination */}
-        <div className="table-footer">
+        <div className="table-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", fontSize: "13px", color: "#6b7280" }}>
           <span className="table-footer__text">
             Menampilkan {startNumber}–{endNumber} dari {filtered.length} transaksi
           </span>
           
           {totalPages > 1 && (
-            <div className="pagination-controls">
+            <div className="pagination-controls" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <button
-                className="btn-outline pagination-btn"
+                className="btn-outline"
+                style={{ padding: "6px 12px", fontSize: "12px" }}
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
               >
@@ -377,7 +390,8 @@ export default function Transaksi() {
               </span>
 
               <button
-                className="btn-outline pagination-btn"
+                className="btn-outline"
+                style={{ padding: "6px 12px", fontSize: "12px" }}
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
               >
@@ -387,7 +401,6 @@ export default function Transaksi() {
           )}
         </div>
       </div>
-
       {showModal && (
         <TransaksiModal onClose={() => setShowModal(false)} onSave={handleSave} />
       )}

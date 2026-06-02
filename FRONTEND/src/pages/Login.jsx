@@ -76,14 +76,12 @@ export default function Login() {
       if (!response.ok) {
         throw new Error(data.message || "Email atau password salah.");
       }
-
       if (data.token) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.user.id);
       } else {
         throw new Error("Token tidak ditemukan dari respon server.");
       }
-
       navigate("/dashboard");
     } catch (err) {
       setError(err.message); 
@@ -207,6 +205,7 @@ export default function Login() {
                 <span className="checkbox-custom" />
                 <span className="checkbox-text">Ingat saya</span>
               </label>
+              <a href="/forgot-password" className="forgot-link">Lupa Password?</a>
             </div>
 
             <button type="submit" className={`btn-login${loading ? " btn-login--loading" : ""}`} disabled={loading}>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import "../css/Forecast.css";
 
 const EXPRESS_URL = "http://localhost:5000";
@@ -8,6 +8,7 @@ function buildDailyCashflow(transactions, days = 7) {
   const map = {};
 
   transactions.forEach((t) => {
+    if (!t.date) return;
     const day = t.date.split("T")[0];
     if (!map[day]) map[day] = 0;
     if (t.type === "INCOME")  map[day] += t.amount;
@@ -257,8 +258,80 @@ export default function ForecastArusKas() {
   const [forecastData, setForecastData]   = useState(null);
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState(null);
+  const [exporting, setExporting]         = useState(false);
 
-  const token  = localStorage.getItem("token");
+  const pageRef = useRef(null);
+  const token   = localStorage.getItem("token");
+
+  const exportPDF = useCallback(async () => {
+    if (!pageRef.current || exporting) return;
+    setExporting(true);
+    try {
+      if (!window.html2canvas) {
+        await new Promise((res, rej) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+      if (!window.jspdf) {
+        await new Promise((res, rej) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+
+      const el     = pageRef.current;
+      const canvas = await window.html2canvas(el, {
+        scale:           2,
+        useCORS:         true,
+        backgroundColor: "#f0f4fb",
+        logging:         false,
+        width:           el.scrollWidth,
+        height:          el.scrollHeight,
+        windowWidth:     el.scrollWidth,
+        windowHeight:    el.scrollHeight,
+      });
+
+      const { jsPDF } = window.jspdf;
+      const imgW      = canvas.width;
+      const imgH      = canvas.height;
+      const pdf       = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW     = pdf.internal.pageSize.getWidth();
+      const pageH     = pdf.internal.pageSize.getHeight();
+      const ratio     = pageW / imgW;
+      const scaledH   = imgH * ratio;
+      const imgData   = canvas.toDataURL("image/png");
+
+      if (scaledH <= pageH) {
+        pdf.addImage(imgData, "PNG", 0, 0, pageW, scaledH);
+      } else {
+        let yOffset = 0;
+        while (yOffset < imgH) {
+          const sliceH     = Math.min(pageH / ratio, imgH - yOffset);
+          const slice      = document.createElement("canvas");
+          slice.width      = imgW;
+          slice.height     = sliceH;
+          slice.getContext("2d").drawImage(canvas, 0, yOffset, imgW, sliceH, 0, 0, imgW, sliceH);
+          if (yOffset > 0) pdf.addPage();
+          pdf.addImage(slice.toDataURL("image/png"), "PNG", 0, 0, pageW, sliceH * ratio);
+          yOffset += sliceH;
+        }
+      }
+
+      const now = new Date();
+      const ts  = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}`;
+      pdf.save(`forecast-${period}hari-${ts}.pdf`);
+    } catch (err) {
+      console.error("Export PDF error:", err);
+      alert("Gagal mengekspor PDF. Silakan coba lagi.");
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, period]);
 
   const fetchForecast = useCallback(async () => {
     if (!token) {
@@ -277,18 +350,18 @@ export default function ForecastArusKas() {
       if (!txRes.ok) throw new Error("Gagal mengambil data transaksi dari server.");
 
       const txBody       = await txRes.json();
-      const transactions = txBody.transactions ?? txBody;
+      
+      // Sinkronisasi properti dari backend baru (txBody.data)
+      const transactions = txBody.data || [];
 
       if (!Array.isArray(transactions) || transactions.length === 0) {
         throw new Error("Belum ada data transaksi. Tambahkan transaksi terlebih dahulu untuk melihat forecast.");
       }
 
-      // Hitung cashflow dari seluruh transaksi historis
       const allDailyCashflow = buildDailyCashflow(transactions, 999); 
       const cashflow7        = allDailyCashflow.slice(-7);            
       const currentBalance   = Math.max(calcCurrentBalance(transactions), 0);
 
-      // Split data income & expense asli riil dari pembukuan database
       const totalIncome  = transactions
         .filter(t => t.type === "INCOME")
         .reduce((s, t) => s + t.amount, 0);
@@ -297,7 +370,6 @@ export default function ForecastArusKas() {
         .filter(t => t.type === "EXPENSE")
         .reduce((s, t) => s + t.amount, 0);
 
-      // Kirim payload lengkap ke backend FastAPI server AI
       const fcRes = await fetch(`${FASTAPI_URL}/forecast`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -338,7 +410,8 @@ export default function ForecastArusKas() {
   const d = forecastData;
 
   return (
-    <div className="fc-page">
+    <div className="fc-page" ref={pageRef}>
+      <style>{`@keyframes fc-spin { to { transform: rotate(360deg); } } .fc-dl-btn-loading { opacity: 0.75; cursor: not-allowed; }`}</style>
       <div className="fc-header">
         <div>
           <h1 className="fc-title">Forecast Arus Kas</h1>
@@ -357,13 +430,30 @@ export default function ForecastArusKas() {
               </button>
             ))}
           </div>
-          <button className="fc-dl-btn" title="Download laporan">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Export PDF
+          <button
+            className={`fc-dl-btn ${exporting ? "fc-dl-btn-loading" : ""}`}
+            title="Download laporan PDF"
+            onClick={exportPDF}
+            disabled={exporting}
+          >
+            {exporting ? (
+              <>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"
+                  style={{ animation: "fc-spin 1s linear infinite" }}>
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                </svg>
+                Mengekspor...
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Export PDF
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -381,15 +471,15 @@ export default function ForecastArusKas() {
           icon={<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>}
           label="Prediksi Pemasukan"
           value={d.pemasukan}
-          sub={`${d.pemasukanChange >= 0 ? "↑" : "↓"} ${d.pemasukanChange >= 0 ? "+" : ""}${d.pemasukanChange}% vs tren lalu`} // 🔥 Dinamis mirip saldo akhir
-          subColor={d.pemasukanChange >= 0 ? "#16a34a" : "#dc2626"} // Hijau jika naik, merah jika turun
+          sub={`${d.pemasukanChange >= 0 ? "↑" : "↓"} ${d.pemasukanChange >= 0 ? "+" : ""}${d.pemasukanChange}% vs tren lalu`}
+          subColor={d.pemasukanChange >= 0 ? "#16a34a" : "#dc2626"}
         />
         <KpiCard
           icon={<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>}
           label="Prediksi Pengeluaran"
           value={d.pengeluaran}
-          sub={`${d.pengeluaranChange >= 0 ? "↑" : "↓"} ${d.pengeluaranChange >= 0 ? "+" : ""}${d.pengeluaranChange}% vs tren lalu`} // 🔥 Dinamis mirip saldo akhir
-          subColor={d.pengeluaranChange <= 0 ? "#16a34a" : "#dc2626"} // 💡 UX Trick: Untuk pengeluaran, kalau TURUN (minus) justru berwarna HIJAU (hemat)!
+          sub={`${d.pengeluaranChange >= 0 ? "↑" : "↓"} ${d.pengeluaranChange >= 0 ? "+" : ""}${d.pengeluaranChange}% vs tren lalu`}
+          subColor={d.pengeluaranChange <= 0 ? "#16a34a" : "#dc2626"}
         />
         <KpiCard
           icon={<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>}
@@ -554,7 +644,6 @@ export default function ForecastArusKas() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

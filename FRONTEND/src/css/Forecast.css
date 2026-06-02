@@ -1,7 +1,4 @@
-/* =====================
-   Forecast.css
-   Halaman Forecast Arus Kas
-   ===================== */
+*, *::before, *::after { box-sizing: border-box; }
 
 .fc-page {
   padding: 28px 32px;
@@ -11,9 +8,11 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-/* ── Header ── */
 .fc-header {
   display: flex;
   align-items: flex-start;
@@ -42,7 +41,6 @@
   flex-shrink: 0;
 }
 
-/* Period Tabs */
 .period-tabs {
   display: flex;
   background: #fff;
@@ -102,7 +100,6 @@
   height: 15px;
 }
 
-/* ── KPI Row ── */
 .fc-kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -115,6 +112,7 @@
   padding: 18px 20px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.05);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
+  min-width: 0;
 }
 
 .kpi-card:hover {
@@ -155,6 +153,7 @@
   color: #1e293b;
   letter-spacing: -0.5px;
   margin-bottom: 4px;
+  word-break: break-word;
 }
 
 .kpi-highlight .kpi-value {
@@ -166,12 +165,13 @@
   font-weight: 500;
 }
 
-/* ── Base Card ── */
 .fc-card {
   background: #fff;
   border-radius: 16px;
   padding: 20px 22px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.055);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .fc-card-head {
@@ -202,7 +202,6 @@
   font-size: 16px;
 }
 
-/* ── Chart ── */
 .fc-card-chart {
   display: flex;
   flex-direction: column;
@@ -212,11 +211,17 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .forecast-svg {
   width: 100%;
-  height: 180px;
+  height: auto;
+  display: block;
+  aspect-ratio: 760 / 160;
+  min-height: 0;
 }
 
 .fc-xaxis {
@@ -235,7 +240,6 @@
   color: #0ea5e9;
 }
 
-/* Chart legend */
 .chart-legend-row {
   display: flex;
   gap: 16px;
@@ -279,7 +283,6 @@
   opacity: 0.6;
 }
 
-/* ── Middle row ── */
 .fc-row {
   display: grid;
   gap: 16px;
@@ -289,7 +292,6 @@
   grid-template-columns: 1fr 1.4fr;
 }
 
-/* ── Skenario ── */
 .card-skenario {
   display: flex;
   flex-direction: column;
@@ -345,6 +347,8 @@
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.4px;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .skenario-growth {
@@ -378,7 +382,6 @@
   color: #94a3b8;
 }
 
-/* ── Timeline ── */
 .card-timeline {
   display: flex;
   flex-direction: column;
@@ -533,6 +536,7 @@
   border-radius: 12px;
   border: 0.5px solid transparent;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .ins-pos  { background: #f0fdf4; border-color: #bbf7d0; }
@@ -622,7 +626,7 @@
   border-radius: 12px;
   padding: 14px 16px;
   text-align: center;
-  min-width: 110px;
+  min-width: 0;
 }
 
 .metric-val {
@@ -692,6 +696,15 @@
   0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
   50%       { box-shadow: 0 0 0 6px rgba(34,197,94,0.08); }
 }
+
+/* ── Export button loading state ── */
+.fc-dl-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+.fc-dl-btn-loading  { opacity: 0.75 !important; }
+
+@keyframes fc-spin {
+  to { transform: rotate(360deg); }
+}
+
 
 /* ── Responsive ── */
 @media (max-width: 1200px) {
