@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import "../css/register.css"; // Menggunakan file CSS yang sama dengan Register/ResetPassword
+import "../css/register.css"; 
 
-// Icon Email (SVG) biar senada dengan LockIcon di ResetPassword
 const MailIcon = () => (
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
@@ -23,7 +22,6 @@ export default function ForgotPassword() {
       setError("");
       setMessage("");
 
-      // Hit ke endpoint forgot-password di backend Express kamu (Port 5000)
       const response = await fetch("http://localhost:5000/api/auth/forgot-password", {
         method: "POST",
         headers: {
@@ -35,13 +33,10 @@ export default function ForgotPassword() {
       const data = await response.json();
 
       if (!response.ok) {
-        // Menangkap key 'error' sesuai handling dari backend authcontroller
         throw new Error(data.error || "Gagal memproses permintaan");
       }
-
-      // Jika sukses, tampilkan pesan berhasil dari backend
       setMessage(data.message || "Link reset password telah dikirim ke email Anda!");
-      setEmail(""); // Mengosongkan input email setelah berhasil
+      setEmail("");
 
     } catch (err) {
       console.error("Forgot Password Error:", err);
@@ -53,8 +48,6 @@ export default function ForgotPassword() {
 
   return (
     <div className="register-page">
-      
-      {/* LEFT SIDE - Struktur & Statis info disamakan dengan ResetPassword */}
       <div className="register-left">
         <div className="overlay"></div>
         <div className="register-left-content">
@@ -85,23 +78,19 @@ export default function ForgotPassword() {
         </div>
       </div>
 
-      {/* RIGHT SIDE - FORM INPUT EMAIL */}
       <div className="register-right">
         <div className="register-card">
-          
           <h2 className="register-title">Minta Tautan Reset</h2>
           <p className="register-subtitle">
             Kami akan mengirimkan link verifikasi perubahan kata sandi ke email Anda
           </p>
 
-          {/* Banner Pesan Error */}
           {error && (
             <div className="register-error-banner" style={{ background: "#fee2e2", color: "#ef4444", padding: "10px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", marginBottom: "16px", border: "1px solid #fca5a5" }}>
               ⚠️ {error}
             </div>
           )}
 
-          {/* Banner Pesan Sukses */}
           {message && (
             <div className="register-success-banner" style={{ background: "#dcfce7", color: "#16a34a", padding: "10px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", marginBottom: "16px", border: "1px solid #bbf7d0" }}>
               📩 {message}
@@ -109,7 +98,6 @@ export default function ForgotPassword() {
           )}
 
           <form onSubmit={handleSubmit} className="register-form">
-            
             <div className="form-group">
               <label>Alamat Email</label>
               <div className="input-group">

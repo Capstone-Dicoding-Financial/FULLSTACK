@@ -114,7 +114,6 @@ export default function ResetPassword() {
 
       <div className="register-right">
         <div className="register-card">
-          
           <h2 className="register-title">Password Baru</h2>
           <p className="register-subtitle">
             Silakan masukkan password baru Anda minimum 6 karakter
@@ -139,7 +138,6 @@ export default function ResetPassword() {
           )}
 
           <form onSubmit={handleSubmit} className="register-form">
-            
             <div className="form-group">
               <label>Password Baru</label>
               <div className="input-group">
