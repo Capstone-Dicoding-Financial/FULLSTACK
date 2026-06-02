@@ -36,7 +36,7 @@ function App() {
           <Route path="/transaksi" element={<Transaksi />} />
           <Route path="/forecast" element={<Forecast />} />
           <Route path="/profile" element={<Profile />} />
-  
+          
         </Route>
       </Routes>
     </BrowserRouter>
