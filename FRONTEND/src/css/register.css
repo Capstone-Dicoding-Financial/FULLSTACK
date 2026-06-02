@@ -1,21 +1,15 @@
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-.register-page {
+/* ── REGISTER PAGE ── */
+.reg-page {
   width: 100%;
-  height: 100vh;
-  overflow-y: auto;
+  min-height: 100vh;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 1fr 1fr;
   background: #f0f4ff;
-  font-family: "Plus Jakarta Sans", sans-serif;
 }
 
-/* ───────── LEFT PANEL ───────── */
-.register-left {
+/* ── LEFT PANEL ── */
+.reg-left {
   position: relative;
   overflow: hidden;
   background: #1e3a8a;
@@ -24,78 +18,101 @@
   justify-content: center;
 }
 
-.register-left::before {
-  content: "";
+/* Photo bg — same as login */
+.reg-left-bg {
   position: absolute;
   inset: 0;
   background:
     linear-gradient(rgba(30,58,138,.78), rgba(37,99,235,.78)),
-    url("https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=900&auto=format&fit=crop");
+    url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=900&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
   opacity: .95;
 }
 
-.register-left-content {
+/* Brand badge top-left */
+.reg-brand {
+  position: absolute;
+  top: 28px;
+  left: 32px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reg-brand-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  backdrop-filter: blur(8px);
+}
+
+.reg-brand-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.03em;
+}
+
+/* Hero copy — centered vertically */
+.reg-left-content {
   position: relative;
   z-index: 2;
   padding: 32px 40px;
   max-width: 520px;
-  color: white;
 }
 
-.register-left-content h1 {
-  font-size: 24px;
-  font-weight: 800;
-  margin-bottom: 22px;
-  letter-spacing: -0.03em;
-}
-
-.register-left-content h2 {
+.reg-left-title {
   font-size: clamp(1.7rem, 2.5vw, 2.2rem);
-  line-height: 1.2;
-  margin-bottom: 16px;
   font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
   letter-spacing: -0.03em;
+  margin-bottom: 16px;
 }
 
-.register-left-content p {
+.reg-left-desc {
   font-size: 15px;
-  color: rgba(255,255,255,.75);
+  color: rgba(255,255,255,0.75);
   line-height: 1.7;
   max-width: 380px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
-.register-stats {
+/* Stats — same layout as login */
+.reg-stats {
   display: flex;
-  gap: 24px;
+  gap: 32px;
 }
 
-.register-stats div {
-  background: rgba(255,255,255,.12);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,.18);
-  padding: 14px 18px;
-  border-radius: 14px;
-  min-width: 110px;
+.reg-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.register-stats strong {
-  display: block;
+.reg-stat strong {
   font-size: 22px;
   font-weight: 800;
   color: #93c5fd;
-  margin-bottom: 4px;
+  letter-spacing: -0.02em;
 }
 
-.register-stats span {
+.reg-stat span {
   font-size: 12px;
-  color: rgba(255,255,255,.7);
+  color: rgba(255,255,255,0.6);
+  font-weight: 500;
 }
 
-/* ───────── RIGHT PANEL ───────── */
-.register-right {
+/* ── RIGHT PANEL ── */
+.reg-right {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,69 +120,92 @@
   padding: 20px 24px;
 }
 
-.register-card {
+.reg-form-wrap {
   width: 100%;
   max-width: 440px;
-  background: white;
-  padding: 30px;
-  border-radius: 24px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 10px 30px rgba(0,0,0,.06);
 }
 
-.register-title {
+/* Logo — identical to login-logo */
+.reg-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  color: #1e3a8a;
+}
+
+.reg-logo-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1e3a8a;
+  letter-spacing: -0.03em;
+}
+
+/* Headings — identical to login-title / login-subtitle */
+.reg-title {
   font-size: clamp(1.6rem, 2.5vw, 2rem);
   font-weight: 800;
   color: #0f172a;
   letter-spacing: -0.03em;
   margin-bottom: 8px;
+  line-height: 1.2;
 }
 
-.register-subtitle {
+.reg-subtitle {
   font-size: 14px;
   color: #64748b;
   margin-bottom: 20px;
   line-height: 1.6;
 }
 
-/* ───────── FORM ───────── */
-.register-form {
+/* ── FORM ── */
+.reg-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.form-group {
+/* Two-column name row */
+.reg-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.reg-fgroup {
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
 
-.form-group label {
+.reg-fgroup label {
   font-size: 13px;
   font-weight: 600;
   color: #374151;
   letter-spacing: 0.01em;
 }
 
-.input-group {
+/* Input wrap — identical to login .input-wrap */
+.reg-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.input-icon {
+.reg-input-icon {
   position: absolute;
   left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
   color: #94a3b8;
   display: flex;
   align-items: center;
   pointer-events: none;
 }
 
-.input-group input {
+.reg-input-wrap:focus-within .reg-input-icon {
+  color: #3b82f6;
+}
+
+.reg-input-wrap input {
   width: 100%;
   padding: 12px 44px 12px 42px;
   font-size: 14px;
@@ -174,22 +214,69 @@
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   outline: none;
-  transition: .2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   font-family: inherit;
 }
 
-.input-group input::placeholder {
-  color: #cbd5e1;
-}
+.reg-input-wrap input::placeholder { color: #cbd5e1; }
 
-.input-group input:focus {
+.reg-input-wrap input:focus {
   border-color: #3b82f6;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
 }
 
-/* ───────── BUTTON ───────── */
-.register-btn {
+/* Eye button — identical to login .input-eye */
+.reg-eye-btn {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  transition: color 0.2s;
+}
+.reg-eye-btn:hover { color: #475569; }
+
+/* ── Password strength ── */
+.reg-strength-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: -2px;
+}
+
+.reg-strength-bar {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.reg-strength-seg {
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background: #e2e8f0;
+  transition: background 0.3s;
+}
+
+.reg-strength-seg.seg-1.active { background: #ef4444; }
+.reg-strength-seg.seg-2.active { background: #f97316; }
+.reg-strength-seg.seg-3.active { background: #eab308; }
+.reg-strength-seg.seg-4.active { background: #22c55e; }
+
+.reg-strength-txt {
+  font-size: 11px;
+  color: #94a3b8;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ── Submit button — identical to login .btn-login ── */
+.reg-submit-btn {
   width: 100%;
   padding: 14px;
   background: #1e3a8a;
@@ -199,52 +286,73 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  transition: .2s;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.01em;
   margin-top: 4px;
   min-height: 50px;
+  font-family: inherit;
 }
 
-.register-btn:hover {
+.reg-submit-btn:hover {
   background: #1e40af;
-  box-shadow: 0 4px 16px rgba(30,58,138,.3);
+  box-shadow: 0 4px 16px rgba(30,58,138,0.3);
   transform: translateY(-1px);
 }
 
-/* ───────── FOOTER ───────── */
-.register-footer {
+.reg-submit-btn:active { transform: translateY(0); }
+
+/* ── Footer ── */
+.reg-footer {
   text-align: center;
   font-size: 14px;
   color: #64748b;
-  margin-top: 22px;
+  margin-top: 24px;
 }
 
-.register-footer a {
+.reg-footer a {
   font-weight: 700;
   color: #1e3a8a;
   text-decoration: none;
-  transition: .2s;
+  transition: color 0.2s;
+}
+.reg-footer a:hover { color: #3b82f6; }
+
+.reg-copy {
+  text-align: center;
+  font-size: 12px;
+  color: #cbd5e1;
+  margin-top: 18px;
 }
 
-.register-footer a:hover {
-  color: #3b82f6;
-}
-
-/* ───────── RESPONSIVE ───────── */
+/* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  .register-page {
+  .reg-page {
     grid-template-columns: 1fr;
+    min-height: 100vh;
   }
 
-  .register-left {
-    display: none;
+  .reg-left {
+    min-height: 260px;
+    align-items: flex-end;
   }
 
-  .register-right {
-    padding: 24px 20px;
+  .reg-left-content {
+    padding: 32px 24px 36px;
   }
 
-  .register-card {
-    max-width: 100%;
-    padding: 26px 22px;
+  .reg-stats {
+    gap: 20px;
+  }
+
+  .reg-right {
+    padding: 36px 20px 40px;
+    align-items: flex-start;
+  }
+
+  .reg-row {
+    grid-template-columns: 1fr;
   }
 }
