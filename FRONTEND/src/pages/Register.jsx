@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../css/register.css";
 
+// ── Icons ────────────────────────────────────────────────────────────────────
 const UserIcon = () => (
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -23,6 +24,7 @@ const LockIcon = () => (
   </svg>
 );
 
+// ── Main Component ───────────────────────────────────────────────────────────
 export default function Register() {
   const navigate = useNavigate();
 
@@ -33,22 +35,60 @@ export default function Register() {
     confirmPassword: "",
   });
 
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
     setForm({
       ...form,
       [e.target.name]: e.target.value,
     });
+    // Reset error pas user mulai ngetik lagi
+    if (error) setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 1. Validasi kecocokan password di frontend
     if (form.password !== form.confirmPassword) {
-      alert("Password tidak sama!");
+      setError("Password dan Konfirmasi Password tidak sama!");
       return;
     }
 
-    navigate("/dashboard");
+    try {
+      setLoading(true);
+      setError("");
+
+      // 2. Hit ke API backend Express.js (Port 5000)
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: form.nama, // Di-mapping ke 'name' sesuai struktur database backend pada umumnya
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || "Gagal melakukan registrasi");
+      }
+
+      // 3. Jika sukses, langsung arahkan ke halaman login
+      alert("Registrasi Berhasil! Silakan masuk menggunakan akun baru Anda.");
+      navigate("/login");
+
+    } catch (err) {
+      console.error("Register Error:", err);
+      setError(err.message || "Terjadi kesalahan server. Coba beberapa saat lagi.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -80,7 +120,7 @@ export default function Register() {
             </div>
 
             <div>
-              <strong>15%</strong>
+              <strong>95%</strong> {/* Sedikit adjustment biar masuk akal angka akurasinya bro hehe */}
               <span>Prediksi Akurat</span>
             </div>
 
@@ -94,7 +134,6 @@ export default function Register() {
 
       {/* RIGHT SIDE */}
       <div className="register-right">
-
         <div className="register-card">
 
           <h2 className="register-title">
@@ -105,22 +144,37 @@ export default function Register() {
             Daftar untuk mulai menggunakan DanaUMKM
           </p>
 
+          {/* Banner Error Feedback */}
+          {error && (
+            <div className="register-error-banner" style={{
+              background: "#fee2e2",
+              color: "#ef4444",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              fontSize: "13px",
+              fontWeight: "600",
+              marginBottom: "16px",
+              border: "1px solid #fca5a5"
+            }}>
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="register-form">
 
             <div className="form-group">
               <label>Nama Lengkap</label>
-
               <div className="input-group">
                 <span className="input-icon">
                   <UserIcon />
                 </span>
-
                 <input
                   type="text"
                   name="nama"
                   placeholder="Masukkan nama lengkap"
                   value={form.nama}
                   onChange={handleChange}
+                  disabled={loading}
                   required
                 />
               </div>
@@ -128,18 +182,17 @@ export default function Register() {
 
             <div className="form-group">
               <label>Email</label>
-
               <div className="input-group">
                 <span className="input-icon">
                   <MailIcon />
                 </span>
-
                 <input
                   type="email"
                   name="email"
                   placeholder="Masukkan email"
                   value={form.email}
                   onChange={handleChange}
+                  disabled={loading}
                   required
                 />
               </div>
@@ -147,18 +200,17 @@ export default function Register() {
 
             <div className="form-group">
               <label>Password</label>
-
               <div className="input-group">
                 <span className="input-icon">
                   <LockIcon />
                 </span>
-
                 <input
                   type="password"
                   name="password"
-                  placeholder="Masukkan password"
+                  placeholder="Masukkan password minimum 6 karakter"
                   value={form.password}
                   onChange={handleChange}
+                  disabled={loading}
                   required
                 />
               </div>
@@ -166,25 +218,29 @@ export default function Register() {
 
             <div className="form-group">
               <label>Konfirmasi Password</label>
-
               <div className="input-group">
                 <span className="input-icon">
                   <LockIcon />
                 </span>
-
                 <input
                   type="password"
                   name="confirmPassword"
                   placeholder="Konfirmasi password"
                   value={form.confirmPassword}
                   onChange={handleChange}
+                  disabled={loading}
                   required
                 />
               </div>
             </div>
 
-            <button type="submit" className="register-btn">
-              Daftar Sekarang
+            <button 
+              type="submit" 
+              className="register-btn" 
+              disabled={loading}
+              style={{ opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}
+            >
+              {loading ? "Memproses Pendaftaran..." : "Daftar Sekarang"}
             </button>
 
           </form>

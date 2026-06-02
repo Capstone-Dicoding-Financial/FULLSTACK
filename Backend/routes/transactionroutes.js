@@ -125,7 +125,7 @@ router.get('/', getTransactions);
  *       401:
  *         description: Token tidak valid
  */
-router.post('/', addTransaction);
+router.post('/', addTransaction, transactionValidationRules, validate);
 
 /**
  * @openapi

@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import "../css/AiInsights.css";
 
-// Helper format rupiah default & ringkas untuk Sumbu Y
 const formatRp = (n) => "Rp " + (n || 0).toLocaleString("id-ID");
 const formatRpShort = (n) => {
   if (n >= 1_000_000_000) return `Rp ${(n / 1_000_000_000).toFixed(1)}M`;
@@ -32,9 +31,7 @@ function CashFlowChart({ actualData }) {
   const maxVal = maxRaw + padding;
   const valRange = maxVal - minVal;
 
-  // Offset X sebesar 70px ke kanan untuk memberikan ruang Sumbu Y di kiri
   const chartLeftOffset = 70;
-  const chartWidth = 710;
 
   const actualMapped = safeActual.map((val, i) => {
     const x = chartLeftOffset + i * (360 / (safeActual.length > 1 ? safeActual.length - 1 : 1));
@@ -55,7 +52,6 @@ function CashFlowChart({ actualData }) {
     return `${path} L${pts[pts.length - 1][0]},110 L${pts[0][0]},110 Z`;
   };
 
-  // Nilai penanda untuk label Sumbu Y (Atas, Tengah, Bawah)
   const yLabels = [
     maxVal,
     minVal + valRange * 0.66,
@@ -79,7 +75,6 @@ function CashFlowChart({ actualData }) {
           </linearGradient>
         </defs>
 
-        {/* Garis Grid Horizontal & Label Sumbu Y */}
         {yLabels.map((val, idx) => {
           const yPos = 15 + idx * 30;
           return (
@@ -97,7 +92,6 @@ function CashFlowChart({ actualData }) {
         <path d={toPath(actualMapped)} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         <path d={toPath(predMapped)} fill="none" stroke="#93c5fd" strokeWidth="2" strokeDasharray="7 4" strokeLinecap="round" strokeLinejoin="round" />
         
-        {/* Garis Pembatas Masa Lalu vs Prediksi Masa Depan */}
         <line x1={chartLeftOffset + 360} y1="10" x2={chartLeftOffset + 360} y2="115" stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 3" />
         
         {actualMapped.map(([x, y], i) => (
@@ -202,7 +196,6 @@ export default function AiInsights() {
   const [loading, setLoading] = useState(true);
   const dropdownRef = useRef(null);
 
-  // Menutup dropdown jika klik di luar area komponen
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -226,7 +219,9 @@ export default function AiInsights() {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
-        setTransactions(data.transactions || []);
+        
+        // Sinkronisasi: Baca dari data.data yang dikirim backend
+        setTransactions(data.data || []);
       } catch (err) {
         console.error("Gagal mengambil data untuk AI:", err);
       } finally {
@@ -236,18 +231,38 @@ export default function AiInsights() {
     fetchTransactions();
   }, []);
 
+  const cutoffDate = useMemo(() => {
+    if (period === "Semua Waktu") return null;
+    const now = new Date();
+    if (period === "Bulan Ini") {
+      return new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    const days = period === "30 Hari Terakhir" ? 30
+               : period === "60 Hari Terakhir" ? 60
+               : 90;
+    const d = new Date(now);
+    d.setDate(d.getDate() - days);
+    return d;
+  }, [period]);
+
   const analytics = useMemo(() => {
     if (!transactions.length) return null;
+
+    const filtered = cutoffDate
+      ? transactions.filter(t => t.date && new Date(t.date) >= cutoffDate)
+      : transactions;
+
+    const data = filtered.length > 0 ? filtered : transactions;
 
     let totalMasuk = 0;
     let totalKeluar = 0;
     const expenseGroups = {};
-    const monthlyTrend = {}; 
+    const monthlyTrend = {};
 
-    transactions.forEach(t => {
+    data.forEach(t => {
       const amt = Number(t.amount) || 0;
       const dateStr = t.date ? t.date.substring(0, 7) : "Unknown";
-      
+
       if (!monthlyTrend[dateStr]) monthlyTrend[dateStr] = { in: 0, out: 0 };
 
       if (t.type === "INCOME") {
@@ -261,38 +276,37 @@ export default function AiInsights() {
       }
     });
 
-    const trendValues = Object.values(monthlyTrend).map(m => m.in - m.out);
-    
+    const trendValues = Object.keys(monthlyTrend)
+      .sort()
+      .map(k => monthlyTrend[k].in - monthlyTrend[k].out);
+
     const sortedExpenses = Object.entries(expenseGroups)
-      .map(([label, val]) => ({ label, val, pct: Math.round((val / totalKeluar) * 100) }))
+      .map(([label, val]) => ({ label, val, pct: Math.round((val / (totalKeluar || 1)) * 100) }))
       .sort((a, b) => b.val - a.val);
 
     const topExpense = sortedExpenses.length > 0 ? sortedExpenses[0] : null;
 
-    return { totalMasuk, totalKeluar, sortedExpenses, topExpense, trendValues };
-  }, [transactions]);
+    return { totalMasuk, totalKeluar, sortedExpenses, topExpense, trendValues, dataCount: data.length };
+  }, [transactions, cutoffDate]);
 
   if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>Memuat Analitik AI...</div>;
   if (!analytics) return <div style={{ padding: "40px", textAlign: "center" }}>Belum ada data yang cukup untuk dianalisis AI.</div>;
 
-  const { totalMasuk, totalKeluar, sortedExpenses, topExpense, trendValues } = analytics;
+  const { totalMasuk, totalKeluar, sortedExpenses, topExpense, trendValues, dataCount } = analytics;
   const laba = totalMasuk - totalKeluar;
   const isProfit = laba > 0;
-  
-  // Hitung NPM (Net Profit Margin)
   const npm = totalMasuk ? Math.round((laba / totalMasuk) * 100) : 0;
-  // Hitung perkiraan rata-rata transaksi harian
   const avgDailyIncome = totalMasuk / (transactions.length || 1);
 
   const colors = ["#1a2a6c", "#22c55e", "#ef4444", "#f59e0b"];
-  const filterOptions = ["Bulan Ini", "30 Hari Terakhir", "60 Hari Terakhir", "90 Hari Terakhir"];
+  const filterOptions = ["Semua Waktu", "Bulan Ini", "30 Hari Terakhir", "60 Hari Terakhir", "90 Hari Terakhir"];
 
   return (
     <div className="ai-page">
       <div className="ai-topbar">
         <div>
           <h1 className="ai-title">AI Insights &amp; Analytics</h1>
-          <p className="ai-sub">Analisis mendalam dari arus kas dan prediksi keputusan finansial berbasis real-data.</p>
+          <p className="ai-sub">Analisis mendalam dari arus kas dan prediksi keputusan finansial berbasis real-data · <strong>{period}</strong></p>
         </div>
         <div className="ai-topbar-actions" ref={dropdownRef}>
           <button className="period-btn" onClick={() => setDropdownOpen(!dropdownOpen)}>
@@ -343,13 +357,13 @@ export default function AiInsights() {
         <div className="ai-card card-akurasi">
           <h2 className="card-title">Status Integritas Model</h2>
           <div className="akurasi-center">
-            <DonutRing value={transactions.length > 20 ? 94 : 68} size={130} stroke={13} color="#1a2a6c" label="Confidence" />
+            <DonutRing value={dataCount > 20 ? 94 : 68} size={130} stroke={13} color="#1a2a6c" label="Confidence" />
           </div>
           <div className="akurasi-stats">
             <div className="akurasi-row">
               <span className="akurasi-dot dot-blue" />
               <span className="akurasi-key">Dataset Teranalisis</span>
-              <span className="akurasi-val-tag tag-strong">{transactions.length} Entri</span>
+              <span className="akurasi-val-tag tag-strong">{dataCount} Entri</span>
             </div>
             <div className="akurasi-row">
               <span className="akurasi-dot dot-green" />

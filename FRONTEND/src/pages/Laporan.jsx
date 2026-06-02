@@ -11,43 +11,50 @@ function fmtAxis(val) {
   return `${sign}${abs}`;
 }
 
-// ── BarChart dengan label sumbu Y ─────────────────────────────────────────────
+// ── BarChart Baru: Menggunakan Sistem Slice & Dimensi yang Sama dengan LineChart ──
 function BarChart({ data, maxVal }) {
-  const LABEL_W = 36;   // lebar area label Y
-  const chartH  = 120;
-  const barW    = 16;
-  const gap     = 6;
-  const groupW  = barW * 2 + gap;
-  const groupGap = 24;
-  const barsW   = data.length * (groupW + groupGap) - groupGap;
-  const totalW  = LABEL_W + barsW + 8;
+  const LABEL_W = 44;   // Lebar area label disamakan dengan LineChart agar garis grid sejajar lurus
+  const PAD_T   = 12;
+  const PAD_B   = 28;
+  const PAD_R   = 12;
+  const W       = 520;   // Lebar dasar disamakan dengan LineChart (520px)
+  const H       = 140;   // Tinggi dasar disamakan dengan LineChart (140px)
+  const plotW   = W - LABEL_W - PAD_R;
+  const plotH   = H;
+  const totalH  = PAD_T + H + PAD_B;
   const safeMax = maxVal || 1;
 
-  // 4 garis grid: 25%, 50%, 75%, 100%
   const ticks = [1, 0.75, 0.5, 0.25, 0];
+
+  // Hitung pembagian space secara dinamis agar batang memenuhi seluruh area SVG
+  const groupSlice = plotW / (data.length || 1);
+  const barW       = Math.max(14, groupSlice * 0.25); // Tebal batang menyesuaikan proporsi space
+  const gap        = 4;  // Jarak antara batang Pemasukan & Pengeluaran
+  const groupWidth = barW * 2 + gap;
 
   return (
     <div className="barchart-wrap">
       <svg
-        viewBox={`0 0 ${totalW} ${chartH + 30}`}
+        viewBox={`0 0 ${W} ${totalH}`}
         preserveAspectRatio="xMidYMid meet"
         className="barchart-svg"
+        style={{ width: "100%", height: "auto" }}
       >
         {/* Grid + label Y */}
         {ticks.map((t) => {
-          const y   = t === 0 ? 0 : (1 - t) * chartH;
+          const y   = PAD_T + (1 - t) * plotH;
           const val = Math.round(safeMax * t);
           return (
             <g key={t}>
               <line
-                x1={LABEL_W} y1={y}
-                x2={totalW}  y2={y}
+                x1={LABEL_W} y1={y.toFixed(1)}
+                x2={W - PAD_R}  y2={y.toFixed(1)}
                 stroke="#f1f5f9" strokeWidth="1"
               />
               <text
-                x={LABEL_W - 4} y={y + 4}
+                x={LABEL_W - 6} y={y + 4}
                 textAnchor="end"
-                fontSize="9"
+                fontSize="10"
                 fill="#94a3b8"
                 fontFamily="Plus Jakarta Sans, sans-serif"
               >
@@ -57,25 +64,36 @@ function BarChart({ data, maxVal }) {
           );
         })}
 
-        {/* Batang */}
+        {/* Batang Diagram */}
         {data.map((d, i) => {
-          const x      = LABEL_W + i * (groupW + groupGap);
-          const hMasuk  = (d.masuk  / safeMax) * chartH;
-          const hKeluar = (d.keluar / safeMax) * chartH;
+          // Menentukan titik tengah dari slice kelompok data bulan
+          const sliceCenter = LABEL_W + (i + 0.5) * groupSlice;
+          const xMasuk      = sliceCenter - groupWidth / 2;
+          const xKeluar     = xMasuk + barW + gap;
+
+          const hMasuk  = (d.masuk  / safeMax) * plotH;
+          const hKeluar = (d.keluar / safeMax) * plotH;
+
+          const yMasuk  = PAD_T + plotH - hMasuk;
+          const yKeluar = PAD_T + plotH - hKeluar;
+
           return (
             <g key={d.bulan}>
+              {/* Batang Pemasukan */}
               <rect
-                x={x} y={chartH - hMasuk}
-                width={barW} height={hMasuk}
-                rx="4" fill="#2563eb" opacity="0.85"
+                x={xMasuk.toFixed(1)} y={yMasuk.toFixed(1)}
+                width={barW} height={Math.max(0, hMasuk)}
+                rx="3" fill="#2563eb" opacity="0.85"
               />
+              {/* Batang Pengeluaran */}
               <rect
-                x={x + barW + gap} y={chartH - hKeluar}
-                width={barW} height={hKeluar}
-                rx="4" fill="#ef4444" opacity="0.75"
+                x={xKeluar.toFixed(1)} y={yKeluar.toFixed(1)}
+                width={barW} height={Math.max(0, hKeluar)}
+                rx="3" fill="#ef4444" opacity="0.75"
               />
+              {/* Label Bulan */}
               <text
-                x={x + barW + gap / 2} y={chartH + 16}
+                x={sliceCenter.toFixed(1)} y={PAD_T + plotH + 18}
                 textAnchor="middle" fontSize="10"
                 fill="#94a3b8"
                 fontFamily="Plus Jakarta Sans, sans-serif"
@@ -218,24 +236,33 @@ export default function Laporan() {
   const [transactions, setTransactions]   = useState([]);
   const [loading, setLoading]             = useState(true);
   const [aiInsight, setAiInsight]         = useState("Memuat rekomendasi AI...");
+  const [isExporting, setIsExporting]     = useState(false);
 
   const [currentPage, setCurrentPage]     = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  // ── Helper auth header — konsisten dengan transactioncontroller ───────────
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
         const response = await fetch("http://localhost:5000/api/transactions", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: getAuthHeaders(),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Gagal mengambil data");
-        setTransactions(data.transactions || []);
+
+        // FIX: transactioncontroller mengembalikan { success, data: [...] }
+        // bukan { transactions: [...] }
+        setTransactions(data.data || []);
       } catch (err) {
         console.error("Error fetching transactions:", err);
       } finally {
@@ -248,12 +275,8 @@ export default function Laporan() {
   useEffect(() => {
     const fetchAIInsight = async () => {
       try {
-        const token = localStorage.getItem("token");
         const response = await fetch("http://localhost:5000/api/transactions/insights", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: getAuthHeaders(),
         });
         const data = await response.json();
         setAiInsight(data.insight || "Gagal memproses rekomendasi.");
@@ -364,332 +387,404 @@ export default function Laporan() {
     { id: "laba-rugi", label: "Laba & Rugi" },
   ];
 
+  // ── FUNGSI UTAMA EXPORT PDF (DYNAMIC IMPORT) ───────────────────────────────
+  const handleExportPDF = () => {
+    setIsExporting(true);
+    const targetElement = document.getElementById("printable-report-area");
+
+    const executeExport = () => {
+      const opt = {
+        margin:       0.3,
+        filename:     `Laporan_Keuangan_UMKM_${period.replace(" ", "_")}.pdf`,
+        image:        { type: "jpeg", quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: "in", format: "letter", orientation: "portrait" }
+      };
+
+      window.html2pdf()
+        .set(opt)
+        .from(targetElement)
+        .save()
+        .then(() => setIsExporting(false))
+        .catch((err) => {
+          console.error("PDF Export error:", err);
+          setIsExporting(false);
+        });
+    };
+
+    if (window.html2pdf) {
+      executeExport();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+      script.onload = executeExport;
+      script.onerror = () => {
+        alert("Gagal memuat sistem pencetak PDF. Periksa koneksi internet Anda.");
+        setIsExporting(false);
+      };
+      document.head.appendChild(script);
+    }
+  };
+
   return (
     <div className="laporan-page">
 
-      <div className="lap-topbar">
+      <div className="lap-topbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 className="lap-title">Laporan Keuangan</h1>
           <p className="lap-sub">Rekap lengkap pemasukan, pengeluaran, dan laba rugi usaha berbasis real data.</p>
         </div>
+        
+        {/* BUTTON EXPORT PDF BARU */}
+        <button 
+          onClick={handleExportPDF} 
+          disabled={isExporting || loading}
+          className="trx-select"
+          style={{
+            background: "#2563eb",
+            color: "#fff",
+            padding: "10px 16px",
+            fontWeight: "600",
+            borderRadius: "8px",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            opacity: (isExporting || loading) ? 0.6 : 1,
+            boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)"
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {isExporting ? "Memproses PDF..." : "Export PDF"}
+        </button>
       </div>
 
-      <div className="lap-summary">
-        <div className="lap-scard lap-scard-blue">
-          <div className="lap-scard-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-              <polyline points="17 6 23 6 23 12" />
-            </svg>
+      {/* Wrapper ID Baru untuk area yang akan dicetak ke dalam file PDF */}
+      <div id="printable-report-area">
+        
+        <div className="lap-summary">
+          <div className="lap-scard lap-scard-blue">
+            <div className="lap-scard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
+              </svg>
+            </div>
+            <div>
+              <p className="lap-scard-label">Total Pemasukan</p>
+              <p className="lap-scard-val">{formatRp(totalMasuk)}</p>
+            </div>
           </div>
-          <div>
-            <p className="lap-scard-label">Total Pemasukan</p>
-            <p className="lap-scard-val">{formatRp(totalMasuk)}</p>
+
+          <div className="lap-scard lap-scard-red">
+            <div className="lap-scard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+                <polyline points="17 18 23 18 23 12" />
+              </svg>
+            </div>
+            <div>
+              <p className="lap-scard-label">Total Pengeluaran</p>
+              <p className="lap-scard-val">{formatRp(totalKeluar)}</p>
+            </div>
+          </div>
+
+          <div className="lap-scard lap-scard-green">
+            <div className="lap-scard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
+            <div>
+              <p className="lap-scard-label">Laba Bersih</p>
+              <p className="lap-scard-val">{formatRp(laba)}</p>
+            </div>
+          </div>
+
+          <div className="lap-scard lap-scard-purple">
+            <div className="lap-scard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg>
+            </div>
+            <div>
+              <p className="lap-scard-label">Saldo Akhir</p>
+              <p className="lap-scard-val">{formatRp(saldoAkhir)}</p>
+            </div>
           </div>
         </div>
 
-        <div className="lap-scard lap-scard-red">
-          <div className="lap-scard-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-              <polyline points="17 18 23 18 23 12" />
-            </svg>
-          </div>
-          <div>
-            <p className="lap-scard-label">Total Pengeluaran</p>
-            <p className="lap-scard-val">{formatRp(totalKeluar)}</p>
-          </div>
+        <div className="lap-tabs">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              className={`lap-tab ${activeTab === t.id ? "lap-tab-active" : ""}`}
+              onClick={() => setActiveTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
-        <div className="lap-scard lap-scard-green">
-          <div className="lap-scard-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </div>
-          <div>
-            <p className="lap-scard-label">Laba Bersih</p>
-            <p className="lap-scard-val">{formatRp(laba)}</p>
-          </div>
-        </div>
-
-        <div className="lap-scard lap-scard-purple">
-          <div className="lap-scard-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="1" y="4" width="22" height="16" rx="2" />
-              <line x1="1" y1="10" x2="23" y2="10" />
-            </svg>
-          </div>
-          <div>
-            <p className="lap-scard-label">Saldo Akhir</p>
-            <p className="lap-scard-val">{formatRp(saldoAkhir)}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="lap-tabs">
-        {tabs.map(t => (
-          <button
-            key={t.id}
-            className={`lap-tab ${activeTab === t.id ? "lap-tab-active" : ""}`}
-            onClick={() => setActiveTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "ringkasan" && (
-        <div className="lap-content">
-          <div className="lap-grid-2">
-            <div className="lap-card">
-              <div className="lap-card-head">
-                <h2 className="lap-card-title">Pemasukan vs Pengeluaran</h2>
-                <p className="lap-card-desc">6 Bulan Terakhir</p>
+        {activeTab === "ringkasan" && (
+          <div className="lap-content">
+            <div className="lap-grid-2">
+              <div className="lap-card">
+                <div className="lap-card-head">
+                  <h2 className="lap-card-title">Pemasukan vs Pengeluaran</h2>
+                  <p className="lap-card-desc">6 Bulan Terakhir</p>
+                </div>
+                <BarChart data={chartsData.barData} maxVal={chartsData.maxBarVal} />
               </div>
-              <BarChart data={chartsData.barData} maxVal={chartsData.maxBarVal} />
-            </div>
 
-            <div className="lap-card">
-              <div className="lap-card-head">
-                <h2 className="lap-card-title">Tren Laba Bersih</h2>
-                <p className="lap-card-desc">Pergerakan Arus Kas</p>
-              </div>
-              <LineChart
-                dataPoints={chartsData.lineData}
-                labels={chartsData.labels}
-                maxVal={chartsData.maxLineVal}
-                minVal={chartsData.minLineVal}
-              />
-            </div>
-          </div>
-
-          <div className="lap-card" style={{ marginTop: "20px" }}>
-            <div className="lap-card-head">
-              <h2 className="lap-card-title">Breakdown Pengeluaran per Kategori</h2>
-              <p className="lap-card-desc">Akumulasi Real-Time</p>
-            </div>
-            <div className="breakdown-grid">
-              {categoryBreakdown.length === 0 ? (
-                <p style={{ color: "#94a3b8", padding: "10px 0" }}>Belum ada data pengeluaran.</p>
-              ) : (
-                categoryBreakdown.map(k => (
-                  <div key={k.label} className="breakdown-row">
-                    <div className="breakdown-left">
-                      <span className="breakdown-dot" style={{ background: k.color }} />
-                      <span className="breakdown-label">{k.label}</span>
-                    </div>
-                    <div className="breakdown-bar-wrap">
-                      <div className="breakdown-track">
-                        <div className="breakdown-fill" style={{ width: `${k.pct}%`, background: k.color }} />
-                      </div>
-                      <span className="breakdown-pct">{k.pct}%</span>
-                    </div>
-                    <span className="breakdown-val">{formatRp(k.val)}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "transaksi" && (
-        <div className="lap-content">
-          <div className="lap-card">
-            <div className="trx-filter-bar">
-              <div className="trx-search-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input
-                  className="trx-search"
-                  placeholder="Cari transaksi..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
+              <div className="lap-card">
+                <div className="lap-card-head">
+                  <h2 className="lap-card-title">Tren Laba Bersih</h2>
+                  <p className="lap-card-desc">Pergerakan Arus Kas</p>
+                </div>
+                <LineChart
+                  dataPoints={chartsData.lineData}
+                  labels={chartsData.labels}
+                  maxVal={chartsData.maxLineVal}
+                  minVal={chartsData.minLineVal}
                 />
               </div>
-              <div className="trx-filters">
-                <select className="trx-select" value={filterTipe} onChange={e => setFilterTipe(e.target.value)}>
-                  <option value="semua">Semua Tipe</option>
-                  <option value="INCOME">Pemasukan</option>
-                  <option value="EXPENSE">Pengeluaran</option>
-                </select>
-                <select className="trx-select" value={filterKategori} onChange={e => setFilterKategori(e.target.value)}>
-                  {allKategori.map(kat => (
-                    <option key={kat} value={kat}>
-                      {kat === "semua" ? "Semua Kategori" : kat}
-                    </option>
-                  ))}
-                </select>
+            </div>
+
+            <div className="lap-card" style={{ marginTop: "20px" }}>
+              <div className="lap-card-head">
+                <h2 className="lap-card-title">Breakdown Pengeluaran per Kategori</h2>
+                <p className="lap-card-desc">Akumulasi Real-Time</p>
+              </div>
+              <div className="breakdown-grid">
+                {categoryBreakdown.length === 0 ? (
+                  <p style={{ color: "#94a3b8", padding: "10px 0" }}>Belum ada data pengeluaran.</p>
+                ) : (
+                  categoryBreakdown.map(k => (
+                    <div key={k.label} className="breakdown-row">
+                      <div className="breakdown-left">
+                        <span className="breakdown-dot" style={{ background: k.color }} />
+                        <span className="breakdown-label">{k.label}</span>
+                      </div>
+                      <div className="breakdown-bar-wrap">
+                        <div className="breakdown-track">
+                          <div className="breakdown-fill" style={{ width: `${k.pct}%`, background: k.color }} />
+                        </div>
+                        <span className="breakdown-pct">{k.pct}%</span>
+                      </div>
+                      <span className="breakdown-val">{formatRp(k.val)}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-
-            <div className="trx-table-wrap">
-              {loading ? (
-                <div style={{ padding: "20px", textAlign: "center" }}>Memuat data...</div>
-              ) : (
-                <table className="trx-table">
-                  <thead>
-                    <tr>
-                      <th>Keterangan</th>
-                      <th>Kategori</th>
-                      <th>Tanggal</th>
-                      <th>Status</th>
-                      <th>Nominal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="trx-empty">Tidak ada transaksi yang cocok.</td>
-                      </tr>
-                    ) : (
-                      paginatedTransactions.map(t => (
-                        <tr key={t.id}>
-                          <td className="trx-keterangan">
-                            <span className={`trx-type-dot ${t.type === "INCOME" ? "dot-masuk" : "dot-keluar"}`} />
-                            {t.description}
-                          </td>
-                          <td><span className="trx-kategori-tag">{t.category}</span></td>
-                          <td className="trx-tanggal">{formatTanggal(t.date)}</td>
-                          <td><span className="trx-status status-sukses">Sukses</span></td>
-                          <td className={`trx-nominal ${t.type === "INCOME" ? "nominal-plus" : "nominal-minus"}`}>
-                            {t.type === "INCOME" ? "+" : "-"} {formatRp(t.amount)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </div>
-
-            <div className="trx-footer" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px", marginTop:"14px" }}>
-              <span>
-                Menampilkan {startNumber}–{endNumber} dari {filtered.length} transaksi (Total database: {transactions.length})
-              </span>
-              {totalPages > 1 && (
-                <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-                  <button
-                    className="trx-select"
-                    style={{ padding:"4px 12px", height:"auto", cursor: currentPage===1 ? "not-allowed" : "pointer", opacity: currentPage===1 ? 0.5 : 1, background:"#fff" }}
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => Math.max(p-1, 1))}
-                  >
-                    &larr; Prev
-                  </button>
-                  <span style={{ fontSize:"13px", color:"#64748b" }}>
-                    Hal <strong>{currentPage}</strong> dari {totalPages}
-                  </span>
-                  <button
-                    className="trx-select"
-                    style={{ padding:"4px 12px", height:"auto", cursor: currentPage===totalPages ? "not-allowed" : "pointer", opacity: currentPage===totalPages ? 0.5 : 1, background:"#fff" }}
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(p => Math.min(p+1, totalPages))}
-                  >
-                    Next &rarr;
-                  </button>
-                </div>
-              )}
-            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {activeTab === "laba-rugi" && (
-        <div className="lap-content">
-          <div className="lap-grid-2">
+        {activeTab === "transaksi" && (
+          <div className="lap-content">
             <div className="lap-card">
-              <h2 className="lap-card-title">Laporan Laba & Rugi</h2>
-              <p className="lap-card-desc" style={{ marginBottom: 16 }}>{period}</p>
-
-              <div className="lr-section">
-                <div className="lr-section-title lr-green-title">PENDAPATAN</div>
-                {incomeBreakdown.length > 0 ? (
-                  incomeBreakdown.map(r => (
-                    <div key={r.label} className="lr-row">
-                      <span className="lr-label">{r.label}</span>
-                      <span className="lr-val lr-plus">{formatRp(r.val)}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="lr-row">
-                    <span className="lr-label" style={{ color:"#94a3b8" }}>Belum ada data pendapatan</span>
-                  </div>
-                )}
-                <div className="lr-subtotal">
-                  <span>Total Pendapatan</span>
-                  <span className="lr-plus">{formatRp(totalMasuk)}</span>
+              <div className="trx-filter-bar">
+                <div className="trx-search-wrap">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    className="trx-search"
+                    placeholder="Cari transaksi..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                </div>
+                <div className="trx-filters">
+                  <select className="trx-select" value={filterTipe} onChange={e => setFilterTipe(e.target.value)}>
+                    <option value="semua">Semua Tipe</option>
+                    <option value="INCOME">Pemasukan</option>
+                    <option value="EXPENSE">Pengeluaran</option>
+                  </select>
+                  <select className="trx-select" value={filterKategori} onChange={e => setFilterKategori(e.target.value)}>
+                    {allKategori.map(kat => (
+                      <option key={kat} value={kat}>
+                        {kat === "semua" ? "Semua Kategori" : kat}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
-              <div className="lr-section">
-                <div className="lr-section-title lr-red-title">BEBAN USAHA</div>
-                {expenseBreakdown.length > 0 ? (
-                  expenseBreakdown.map(r => (
-                    <div key={r.label} className="lr-row">
-                      <span className="lr-label">{r.label}</span>
-                      <span className="lr-val lr-minus">{formatRp(r.val)}</span>
-                    </div>
-                  ))
+              <div className="trx-table-wrap">
+                {loading ? (
+                  <div style={{ padding: "20px", textAlign: "center" }}>Memuat data...</div>
                 ) : (
-                  <div className="lr-row">
-                    <span className="lr-label" style={{ color:"#94a3b8" }}>Belum ada data beban</span>
-                  </div>
+                  <table className="trx-table">
+                    <thead>
+                      <tr>
+                        <th>Keterangan</th>
+                        <th>Kategori</th>
+                        <th>Tanggal</th>
+                        <th>Status</th>
+                        <th>Nominal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="trx-empty">Tidak ada transaksi yang cocok.</td>
+                        </tr>
+                      ) : (
+                        paginatedTransactions.map(t => (
+                          <tr key={t.id}>
+                            <td className="trx-keterangan">
+                              <span className={`trx-type-dot ${t.type === "INCOME" ? "dot-masuk" : "dot-keluar"}`} />
+                              {t.description}
+                            </td>
+                            <td><span className="trx-kategori-tag">{t.category}</span></td>
+                            <td className="trx-tanggal">{formatTanggal(t.date)}</td>
+                            <td><span className="trx-status status-sukses">Sukses</span></td>
+                            <td className={`trx-nominal ${t.type === "INCOME" ? "nominal-plus" : "nominal-minus"}`}>
+                              {t.type === "INCOME" ? "+" : "-"} {formatRp(t.amount)}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 )}
-                <div className="lr-subtotal">
-                  <span>Total Beban</span>
-                  <span className="lr-minus">{formatRp(totalKeluar)}</span>
-                </div>
               </div>
 
-              <div className="lr-total">
-                <span className="lr-total-label">LABA BERSIH</span>
-                <span className="lr-total-val">{formatRp(laba)}</span>
+              <div className="trx-footer" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px", marginTop:"14px" }}>
+                <span>
+                  Menampilkan {startNumber}–{endNumber} dari {filtered.length} transaksi (Total database: {transactions.length})
+                </span>
+                {totalPages > 1 && (
+                  <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                    <button
+                      className="trx-select"
+                      style={{ padding:"4px 12px", height:"auto", cursor: currentPage===1 ? "not-allowed" : "pointer", opacity: currentPage===1 ? 0.5 : 1, background:"#fff" }}
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(p => Math.max(p-1, 1))}
+                    >
+                      &larr; Prev
+                    </button>
+                    <span style={{ fontSize:"13px", color:"#64748b" }}>
+                      Hal <strong>{currentPage}</strong> dari {totalPages}
+                    </span>
+                    <button
+                      className="trx-select"
+                      style={{ padding:"4px 12px", height:"auto", cursor: currentPage===totalPages ? "not-allowed" : "pointer", opacity: currentPage===totalPages ? 0.5 : 1, background:"#fff" }}
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(p => Math.min(p+1, totalPages))}
+                    >
+                      Next &rarr;
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+        )}
 
-            <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+        {activeTab === "laba-rugi" && (
+          <div className="lap-content">
+            <div className="lap-grid-2">
               <div className="lap-card">
-                <h2 className="lap-card-title">Rasio Keuangan</h2>
-                <p className="lap-card-desc" style={{ marginBottom:14 }}>Indikator kesehatan usaha</p>
-                {[
-                  { label:"Profit Margin",            val:`${profitMargin}%`,   status: profitMargin >= 10 ? "good" : "warn",    desc: profitMargin >= 10 ? "Margin profit terpantau sehat" : "Di bawah rata-rata target (10%)" },
-                  { label:"Rasio Pengeluaran",         val:`${rasioPengeluaran}%`, status: rasioPengeluaran > 80 ? "bad" : "good", desc: rasioPengeluaran > 80 ? "Terlalu tinggi, perlu efisiensi" : "Beban operasional terkendali" },
-                  { label:"Pertumbuhan Pendapatan",    val:`${pertumbuhan >= 0 ? "+" : ""}${pertumbuhan}%`, status: pertumbuhan >= 0 ? "good" : "bad", desc: pertumbuhan >= 0 ? "Lebih baik dari bulan lalu" : "Terjadi penurunan omset" },
-                  { label:"Likuiditas",                val:`${likuiditas}×`,      status: likuiditas >= 1 ? "good" : "warn",       desc: likuiditas >= 1 ? "Arus kas cukup sehat" : "Perputaran uang sedang lambat" },
-                ].map(r => (
-                  <div key={r.label} className="rasio-row">
-                    <div className="rasio-left">
-                      <span className="rasio-label">{r.label}</span>
-                      <span className="rasio-desc">{r.desc}</span>
+                <h2 className="lap-card-title">Laporan Laba & Rugi</h2>
+                <p className="lap-card-desc" style={{ marginBottom: 16 }}>{period}</p>
+
+                <div className="lr-section">
+                  <div className="lr-section-title lr-green-title">PENDAPATAN</div>
+                  {incomeBreakdown.length > 0 ? (
+                    incomeBreakdown.map(r => (
+                      <div key={r.label} className="lr-row">
+                        <span className="lr-label">{r.label}</span>
+                        <span className="lr-val lr-plus">{formatRp(r.val)}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="lr-row">
+                      <span className="lr-label" style={{ color:"#94a3b8" }}>Belum ada data pendapatan</span>
                     </div>
-                    <span className={`rasio-val rasio-${r.status}`}>{r.val}</span>
+                  )}
+                  <div className="lr-subtotal">
+                    <span>Total Pendapatan</span>
+                    <span className="lr-plus">{formatRp(totalMasuk)}</span>
                   </div>
-                ))}
+                </div>
+
+                <div className="lr-section">
+                  <div className="lr-section-title lr-red-title">BEBAN USAHA</div>
+                  {expenseBreakdown.length > 0 ? (
+                    expenseBreakdown.map(r => (
+                      <div key={r.label} className="lr-row">
+                        <span className="lr-label">{r.label}</span>
+                        <span className="lr-val lr-minus">{formatRp(r.val)}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="lr-row">
+                      <span className="lr-label" style={{ color:"#94a3b8" }}>Belum ada data beban</span>
+                    </div>
+                  )}
+                  <div className="lr-subtotal">
+                    <span>Total Beban</span>
+                    <span className="lr-minus">{formatRp(totalKeluar)}</span>
+                  </div>
+                </div>
+
+                <div className="lr-total">
+                  <span className="lr-total-label">LABA BERSIH</span>
+                  <span className="lr-total-val">{formatRp(laba)}</span>
+                </div>
               </div>
 
-              <div className="lap-card lap-card-insight">
-                <div className="insight-icon-wrap">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
+              <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+                <div className="lap-card">
+                  <h2 className="lap-card-title">Rasio Keuangan</h2>
+                  <p className="lap-card-desc" style={{ marginBottom:14 }}>Indikator kesehatan usaha</p>
+                  {[
+                    { label:"Profit Margin",            val:`${profitMargin}%`,   status: profitMargin >= 10 ? "good" : "warn",    desc: profitMargin >= 10 ? "Margin profit terpantau sehat" : "Di bawah rata-rata target (10%)" },
+                    { label:"Rasio Pengeluaran",         val:`${rasioPengeluaran}%`, status: rasioPengeluaran > 80 ? "bad" : "good", desc: rasioPengeluaran > 80 ? "Terlalu tinggi, perlu efisiensi" : "Beban operasional terkendali" },
+                    { label:"Pertumbuhan Pendapatan",    val:`${pertumbuhan >= 0 ? "+" : ""}${pertumbuhan}%`, status: pertumbuhan >= 0 ? "good" : "bad", desc: pertumbuhan >= 0 ? "Lebih baik dari bulan lalu" : "Terjadi penurunan omset" },
+                    { label:"Likuiditas",                val:`${likuiditas}×`,      status: likuiditas >= 1 ? "good" : "warn",       desc: likuiditas >= 1 ? "Arus kas cukup sehat" : "Perputaran uang sedang lambat" },
+                  ].map(r => (
+                    <div key={r.label} className="rasio-row">
+                      <div className="rasio-left">
+                        <span className="rasio-label">{r.label}</span>
+                        <span className="rasio-desc">{r.desc}</span>
+                      </div>
+                      <span className={`rasio-val rasio-${r.status}`}>{r.val}</span>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <p className="insight-card-title">Rekomendasi AI</p>
-                  <p className="insight-card-text">{aiInsight}</p>
-                  <button className="insight-card-btn">Lihat Detail AI →</button>
+
+                <div className="lap-card lap-card-insight">
+                  <div className="insight-icon-wrap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="insight-card-title">Rekomendasi AI</p>
+                    <p className="insight-card-text">{aiInsight}</p>
+                    <button className="insight-card-btn">Lihat Detail AI →</button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </div> {/* Akhir dari printable-report-area */}
     </div>
   );
 }
