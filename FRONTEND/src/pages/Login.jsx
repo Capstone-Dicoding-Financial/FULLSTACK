@@ -59,18 +59,18 @@ export default function Login() {
     setLoading(true);
     setError("");
 
-    try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-        }),
-      });
-
+try {
+  const response = await fetch("https://fullstack-jdtoajx9g-capstonedicoding.vercel.app/api/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: form.email,
+      password: form.password,
+    }),
+  });
+  
       const data = await response.json();
 
       if (!response.ok) {

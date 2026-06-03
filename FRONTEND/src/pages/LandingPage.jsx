@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../css/landingpage.css"; // ← Import file CSS khusus
+import "../css/landingpage.css";
 
-/* ── ICONS ── */
 const Icon = ({ d, size = 20 }) => (
   <svg width={size} height={size} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
     <path d={d} />

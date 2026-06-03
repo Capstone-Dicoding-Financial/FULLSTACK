@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import "../css/Laporan.css";
 
+// 1. Definisikan Base URL API secara dinamis (otomatis fallback ke Vercel jika .env lokal kosong)
+const apiBaseUrl = import.meta.env.VITE_API_URL || "https://fullstack-jdtoajx9g-capstonedicoding.vercel.app";
+
 function fmtAxis(val) {
   const abs = Math.abs(val);
   const sign = val < 0 ? "-" : "";
@@ -214,6 +217,7 @@ export default function Laporan() {
   const [isExporting, setIsExporting]     = useState(false);
   const [currentPage, setCurrentPage]     = useState(1);
   const ITEMS_PER_PAGE = 10;
+  
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -222,11 +226,12 @@ export default function Laporan() {
     };
   };
 
+  // FIX: Ditambahkan /api sebelum rute transaksi
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:5000/api/transactions", {
+        const response = await fetch(`${apiBaseUrl}/api/transactions`, {
           headers: getAuthHeaders(),
         });
         const data = await response.json();
@@ -242,10 +247,11 @@ export default function Laporan() {
     fetchTransactions();
   }, []);
 
+  // FIX: Ditambahkan /api sebelum rute insights
   useEffect(() => {
     const fetchAIInsight = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/transactions/insights", {
+        const response = await fetch(`${apiBaseUrl}/api/transactions/insights`, {
           headers: getAuthHeaders(),
         });
         const data = await response.json();
@@ -266,6 +272,7 @@ export default function Laporan() {
   const totalKeluar = transactions.filter(t => t.type === "EXPENSE").reduce((a, t) => a + Math.abs(t.amount || 0), 0);
   const laba        = totalMasuk - totalKeluar;
   const saldoAkhir  = laba;
+
   const chartsData = useMemo(() => {
     const monthsShort = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"];
     const anchorDate  = new Date();
@@ -331,10 +338,13 @@ export default function Laporan() {
   const rasioPengeluaran  = totalMasuk > 0 ? ((totalKeluar / totalMasuk) * 100).toFixed(1) : 0;
   const likuiditas        = totalKeluar > 0 ? (totalMasuk / totalKeluar).toFixed(1) : 0;
   const pertumbuhan       = 8.2;
-  const allKategori = ["semua", ...new Set(transactions.map(t => t.category))];
+  
+  // Ditambahkan fallback "Lain-lain" untuk antisipasi data kategori bernilai null
+  const allKategori = ["semua", ...new Set(transactions.map(t => t.category || "Lain-lain"))];
+  
   const filtered = transactions.filter(t => {
     const matchTipe   = filterTipe === "semua" || t.type === filterTipe;
-    const matchKat    = filterKategori === "semua" || t.category === filterKategori;
+    const matchKat    = filterKategori === "semua" || (t.category || "Lain-lain") === filterKategori;
     const matchSearch = (t.description || "").toLowerCase().includes(search.toLowerCase());
     return matchTipe && matchKat && matchSearch;
   });
@@ -608,7 +618,7 @@ export default function Laporan() {
                               <span className={`trx-type-dot ${t.type === "INCOME" ? "dot-masuk" : "dot-keluar"}`} />
                               {t.description}
                             </td>
-                            <td><span className="trx-kategori-tag">{t.category}</span></td>
+                            <td><span className="trx-kategori-tag">{t.category || "Lain-lain"}</span></td>
                             <td className="trx-tanggal">{formatTanggal(t.date)}</td>
                             <td><span className="trx-status status-sukses">Sukses</span></td>
                             <td className={`trx-nominal ${t.type === "INCOME" ? "nominal-plus" : "nominal-minus"}`}>
