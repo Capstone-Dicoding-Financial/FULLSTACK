@@ -1,6 +1,6 @@
 /* =====================
    Laporan.css
-   Halaman Laporan Keuangan
+   Halaman Laporan Keuangan - Refactored Height & Layout Balanced
    ===================== */
 
 .laporan-page {
@@ -53,14 +53,8 @@
   transition: box-shadow 0.2s;
   font-family: inherit;
 }
-
 .period-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-
-.period-btn svg {
-  width: 14px;
-  height: 14px;
-  color: #94a3b8;
-}
+.period-btn svg { width: 14px; height: 14px; color: #94a3b8; }
 
 .lap-export-btn {
   display: flex;
@@ -77,16 +71,8 @@
   transition: background 0.2s, transform 0.15s;
   font-family: inherit;
 }
-
-.lap-export-btn:hover {
-  background: #1d4ed8;
-  transform: translateY(-1px);
-}
-
-.lap-export-btn svg {
-  width: 15px;
-  height: 15px;
-}
+.lap-export-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+.lap-export-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; }
 
 /* ── Summary cards ── */
 .lap-summary {
@@ -106,11 +92,7 @@
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   transition: transform 0.2s, box-shadow 0.2s;
 }
-
-.lap-scard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.09);
-}
+.lap-scard:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.09); }
 
 .lap-scard-icon {
   width: 36px;
@@ -121,7 +103,6 @@
   justify-content: center;
   flex-shrink: 0;
 }
-
 .lap-scard-icon svg { width: 17px; height: 17px; }
 
 .lap-scard-blue .lap-scard-icon { background: #dbeafe; color: #2563eb; }
@@ -129,29 +110,9 @@
 .lap-scard-green .lap-scard-icon { background: #dcfce7; color: #16a34a; }
 .lap-scard-purple .lap-scard-icon { background: #ede9fe; color: #7c3aed; }
 
-.lap-scard-label {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin: 0 0 4px;
-}
-
-.lap-scard-val {
-  font-size: 18px;
-  font-weight: 800;
-  color: #1e293b;
-  letter-spacing: -0.4px;
-  margin: 0 0 4px;
-}
-
-.lap-scard-trend {
-  font-size: 11.5px;
-  font-weight: 600;
-  margin: 0;
-}
-
+.lap-scard-label { font-size: 11.5px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin: 0 0 4px; }
+.lap-scard-val { font-size: 18px; font-weight: 800; color: #1e293b; letter-spacing: -0.4px; margin: 0 0 4px; }
+.lap-scard-trend { font-size: 11.5px; font-weight: 600; margin: 0; }
 .trend-up   { color: #16a34a; }
 .trend-down { color: #dc2626; }
 
@@ -179,7 +140,6 @@
   transition: background 0.2s, color 0.2s;
   font-family: inherit;
 }
-
 .lap-tab:hover { background: #f1f5f9; color: #334155; }
 
 .lap-tab-active {
@@ -188,7 +148,7 @@
   font-weight: 600;
 }
 
-/* ── Content area ── */
+/* ── Content Grid Area (KOREKSI TINGGI SEJAJAR) ── */
 .lap-content {
   display: flex;
   flex-direction: column;
@@ -199,439 +159,84 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  align-items: stretch; /* Memaksa kolom kiri dan kanan sama tinggi */
 }
 
-/* ── Cards ── */
+.laporan-left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.laporan-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+
+/* ── Cards Baseline ── */
 .lap-card {
   background: #ffffff;
   border-radius: 16px;
   padding: 20px 22px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.055);
 }
+.lap-card-head { margin-bottom: 14px; }
+.lap-card-title { font-size: 15px; font-weight: 700; color: #1e293b; margin: 0 0 3px; }
+.lap-card-desc { font-size: 12px; color: #94a3b8; margin: 0; }
 
-.lap-card-head {
-  margin-bottom: 14px;
-}
-
-.lap-card-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 3px;
-}
-
-.lap-card-desc {
-  font-size: 12px;
-  color: #94a3b8;
-  margin: 0;
-}
-
-/* ── Bar chart ── */
+/* ── Charts ── */
 .barchart-wrap { width: 100%; }
+.barchart-svg { width: 100%; height: 140px; }
+.barchart-legend { display: flex; gap: 16px; margin-top: 8px; }
+.bcleg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #64748b; }
+.bcleg-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
-.barchart-svg {
-  width: 100%;
-  height: 155px;
-}
-
-.barchart-legend {
-  display: flex;
-  gap: 16px;
-  margin-top: 8px;
-}
-
-.bcleg-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #64748b;
-}
-
-.bcleg-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  display: inline-block;
-}
-
-/* ── Line chart ── */
 .linechart-wrap { width: 100%; margin-top: 4px; }
-
-.linechart-svg {
-  width: 100%;
-  height: 110px;
-}
-
-.laba-summary {
-  display: flex;
-  gap: 16px;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 0.5px solid #f1f5f9;
-}
-
-.laba-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.laba-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.laba-key { color: #94a3b8; }
-
-.laba-val { font-weight: 600; color: #334155; }
+.linechart-svg { width: 100%; height: 140px; }
 
 /* ── Breakdown ── */
-.breakdown-grid {
+.breakdown-grid { display: flex; flex-direction: column; gap: 12px; }
+.breakdown-row { display: grid; grid-template-columns: 140px 1fr 100px; align-items: center; gap: 10px; }
+.breakdown-left { display: flex; align-items: center; gap: 8px; }
+.breakdown-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.breakdown-label { font-size: 12.5px; color: #334155; font-weight: 500; }
+.breakdown-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.breakdown-track { flex: 1; height: 7px; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
+.breakdown-fill { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
+.breakdown-pct { font-size: 11.5px; font-weight: 600; color: #475569; width: 28px; text-align: right; flex-shrink: 0; }
+.breakdown-val { font-size: 12.5px; font-weight: 700; color: #1e293b; text-align: right; }
+
+/* ── Rasio Keuangan List ── */
+.rasio-list { display: flex; flex-direction: column; gap: 14px; }
+.rasio-row { display: flex; justify-content: space-between; align-items: center; padding-bottom: 11px; border-bottom: 0.5px solid #f1f5f9; }
+.rasio-row:last-child { border-bottom: none; padding-bottom: 0; }
+.rasio-left { display: flex; flex-direction: column; }
+.rasio-label { font-size: 13px; font-weight: 600; color: #334155; }
+.rasio-desc { font-size: 11.5px; color: #94a3b8; margin-top: 1px; }
+.rasio-val { font-size: 13.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.rasio-good { background: #dcfce7; color: #16a34a; }
+.rasio-normal { background: #f0f4fb; color: #2563eb; }
+.rasio-warn { background: #fef3c7; color: #d97706; }
+.rasio-bad { background: #fee2e2; color: #dc2626; }
+
+/* ── UPGRADED AI CARD ZONE (KUNCI PENGISIAN RUANG KOSONG) ── */
+.upgraded-ai-card {
   display: flex;
   flex-direction: column;
+  flex-grow: 1; /* Otomatis memanjang penuhin ke bawah */
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.05);
+}
+
+.ai-header-zone {
+  display: flex;
+  align-items: center;
   gap: 12px;
-}
-
-.breakdown-row {
-  display: grid;
-  grid-template-columns: 160px 1fr 120px;
-  align-items: center;
-  gap: 10px;
-}
-
-.breakdown-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.breakdown-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.breakdown-label {
-  font-size: 13px;
-  color: #334155;
-  font-weight: 500;
-}
-
-.breakdown-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.breakdown-track {
-  flex: 1;
-  height: 7px;
-  background: #f1f5f9;
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.breakdown-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 0.8s ease;
-}
-
-.breakdown-pct {
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-  width: 28px;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.breakdown-val {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1e293b;
-  text-align: right;
-}
-
-/* ── Transaksi table ── */
-.trx-filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.trx-search-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 200px;
-  background: #f8fafc;
-  border: 0.5px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 8px 12px;
-}
-
-.trx-search-wrap svg {
-  width: 15px;
-  height: 15px;
-  color: #94a3b8;
-  flex-shrink: 0;
-}
-
-.trx-search {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 13px;
-  color: #334155;
-  width: 100%;
-  font-family: inherit;
-}
-
-.trx-search::placeholder { color: #cbd5e1; }
-
-.trx-filters {
-  display: flex;
-  gap: 8px;
-}
-
-.trx-select {
-  padding: 8px 12px;
-  background: #f8fafc;
-  border: 0.5px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 13px;
-  color: #334155;
-  cursor: pointer;
-  font-family: inherit;
-  outline: none;
-}
-
-.trx-table-wrap {
-  overflow-x: auto;
-}
-
-.trx-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
-}
-
-.trx-table thead th {
-  text-align: left;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  padding: 0 0 10px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.trx-table tbody tr {
-  border-bottom: 0.5px solid #f8fafc;
-  transition: background 0.15s;
-}
-
-.trx-table tbody tr:last-child { border-bottom: none; }
-
-.trx-table tbody tr:hover { background: #f8fafc; }
-
-.trx-table tbody td {
-  padding: 12px 0;
-  color: #334155;
-  vertical-align: middle;
-}
-
-.trx-table tbody td:last-child { text-align: right; }
-
-.trx-keterangan {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.trx-type-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.dot-masuk { background: #22c55e; }
-.dot-keluar { background: #ef4444; }
-
-.trx-kategori-tag {
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 11.5px;
-  font-weight: 500;
-  padding: 3px 10px;
-  border-radius: 20px;
-}
-
-.trx-tanggal { color: #94a3b8; font-size: 12.5px; }
-
-.trx-status {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.status-sukses  { background: #dcfce7; color: #166534; }
-.status-lunas   { background: #dbeafe; color: #1e40af; }
-.status-menunggu { background: #fef3c7; color: #92400e; }
-
-.trx-nominal {
-  font-weight: 700;
-  font-size: 13.5px;
-}
-
-.nominal-plus { color: #16a34a; }
-.nominal-minus { color: #ef4444; }
-
-.trx-empty {
-  text-align: center;
-  color: #94a3b8;
-  font-size: 13px;
-  padding: 32px 0 !important;
-}
-
-.trx-footer {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 0.5px solid #f1f5f9;
-  font-size: 12px;
-  color: #94a3b8;
-  text-align: right;
-}
-
-/* ── Laba Rugi ── */
-.lr-section {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 0.5px solid #f1f5f9;
-}
-
-.lr-section-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
-}
-
-.lr-green-title { color: #16a34a; }
-.lr-red-title   { color: #dc2626; }
-
-.lr-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 7px 0;
-  border-bottom: 0.5px solid #f8fafc;
-}
-
-.lr-label { font-size: 13px; color: #475569; }
-
-.lr-val {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.lr-plus  { color: #16a34a; }
-.lr-minus { color: #ef4444; }
-
-.lr-subtotal {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0 0;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.lr-total {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 16px;
-  background: #f0fdf4;
-  border-radius: 10px;
-  border: 0.5px solid #bbf7d0;
-  margin-top: 8px;
-}
-
-.lr-total-label {
-  font-size: 14px;
-  font-weight: 700;
-  color: #166534;
-  letter-spacing: 0.5px;
-}
-
-.lr-total-val {
-  font-size: 18px;
-  font-weight: 800;
-  color: #16a34a;
-}
-
-/* ── Rasio ── */
-.rasio-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 0.5px solid #f1f5f9;
-}
-
-.rasio-row:last-child { border-bottom: none; }
-
-.rasio-left { flex: 1; }
-
-.rasio-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1e293b;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.rasio-desc {
-  font-size: 11.5px;
-  color: #94a3b8;
-  display: block;
-}
-
-.rasio-val {
-  font-size: 15px;
-  font-weight: 800;
-  padding: 4px 12px;
-  border-radius: 20px;
-  flex-shrink: 0;
-  margin-left: 12px;
-}
-
-.rasio-good { background: #dcfce7; color: #166534; }
-.rasio-warn { background: #fef3c7; color: #92400e; }
-.rasio-bad  { background: #fee2e2; color: #991b1b; }
-
-/* ── Insight card ── */
-.lap-card-insight {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  background: #eff6ff;
-  border: 0.5px solid #bfdbfe;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #e2e8f0;
 }
 
 .insight-icon-wrap {
@@ -645,55 +250,56 @@
   flex-shrink: 0;
   color: #2563eb;
 }
-
 .insight-icon-wrap svg { width: 16px; height: 16px; }
 
-.insight-card-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1e40af;
-  margin: 0 0 5px;
+.ai-title-status { display: flex; flex-direction: column; }
+.insight-card-title { font-size: 13.5px; font-weight: 700; color: #1e40af; margin: 0; }
+.ai-badge-score { font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; width: fit-content; margin-top: 2px; }
+
+.ai-content-zone { margin-bottom: 14px; }
+.insight-card-text { font-size: 12px; color: #334155; line-height: 1.6; margin: 0; text-align: justify; }
+
+/* Sektor Poin Tindakan Baru */
+.ai-action-zone {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  flex-grow: 1; /* Memaksa kotak saran memakan penuhin space */
 }
+.action-zone-title { font-size: 12px; font-weight: 700; color: #334155; margin: 0 0 8px 0; }
+.ai-action-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.ai-action-list li { display: flex; align-items: flex-start; gap: 8px; }
+.ai-action-list p { font-size: 11.5px; color: #475569; line-height: 1.4; margin: 0; }
+.action-dot-indicator { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.action-dot-indicator.efisiensi { background: #3b82f6; }
+.action-dot-indicator.kas { background: #10b981; }
 
-.insight-card-text {
-  font-size: 12px;
-  color: #3730a3;
-  line-height: 1.55;
-  margin: 0 0 8px;
-}
+.ai-footer-zone { margin-top: auto; padding-top: 8px; }
+.insight-card-btn { background: none; border: none; padding: 0; font-size: 12.5px; font-weight: 700; color: #2563eb; cursor: pointer; font-family: inherit; transition: color 0.2s; }
+.insight-card-btn:hover { color: #1d4ed8; text-decoration: underline; }
 
-.insight-card-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 12px;
-  font-weight: 700;
-  color: #2563eb;
-  cursor: pointer;
-  font-family: inherit;
-}
+/* ── Transaksi Filter & Table ── */
+.trx-filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.trx-search-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; background: #f8fafc; border: 0.5px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; }
+.trx-search-wrap svg { width: 15px; height: 15px; color: #94a3b8; flex-shrink: 0; }
+.trx-search { border: none; background: transparent; outline: none; font-size: 13px; color: #334155; width: 100%; font-family: inherit; }
+.trx-filters { display: flex; gap: 8px; }
+.trx-select { padding: 8px 12px; background: #f8fafc; border: 0.5px solid #e2e8f0; border-radius: 10px; font-size: 13px; color: #334155; cursor: pointer; font-family: inherit; outline: none; }
+.trx-table-wrap { overflow-x: auto; }
+.trx-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.trx-table thead th { text-align: left; font-size: 11.5px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; padding: 0 0 10px; border-bottom: 1px solid #f1f5f9; }
+.trx-table tbody tr { border-bottom: 0.5px solid #f8fafc; transition: background 0.15s; }
+.trx-table tbody tr:hover { background: #f8fafc; }
+.trx-table tbody td { padding: 12px 0; color: #334155; vertical-align: middle; }
+.trx-cat-badge { background: #e2e8f0; color: #475569; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
 
-.insight-card-btn:hover { text-decoration: underline; }
-
-/* ── Responsive ── */
-@media (max-width: 1100px) {
+/* ── Responsive Responsiveness ── */
+@media (max-width: 992px) {
   .lap-summary { grid-template-columns: repeat(2, 1fr); }
-  .lap-grid-2  { grid-template-columns: 1fr; }
-  .breakdown-row { grid-template-columns: 130px 1fr 100px; }
+  .lap-grid-2 { grid-template-columns: 1fr; }
 }
-
-@media (max-width: 768px) {
-  .laporan-page { padding: 16px; }
-  .lap-title    { font-size: 20px; }
-  .lap-summary  { grid-template-columns: 1fr 1fr; }
-  .lap-topbar   { flex-direction: column; gap: 12px; }
-  .trx-filter-bar { flex-direction: column; }
-  .trx-filters  { width: 100%; }
-  .trx-select   { flex: 1; }
-  .breakdown-row { grid-template-columns: 1fr; gap: 4px; }
-  .breakdown-val { text-align: left; }
-}
-
-@media (max-width: 480px) {
+@media (max-width: 576px) {
   .lap-summary { grid-template-columns: 1fr; }
+  .lap-topbar { flex-direction: column; gap: 12px; }
 }
