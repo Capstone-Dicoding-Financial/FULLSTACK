@@ -1,22 +1,26 @@
 import axios from 'axios';
 
-const AI_BASE_URL  = process.env.PYTHON_AI_URL;   // wajib di-set di Vercel!
-const TIMEOUT_MS   = 90_000;   // 90 detik — HuggingFace cold start bisa lama
-const MAX_RETRIES  = 4;
-const RETRY_DELAY  = 8_000;    // 8 detik antar retry
+// ─── Sesuaikan import ini dengan struktur project kamu ────────────────────────
+// Ganti path-nya jika berbeda
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
-// ─── Helper: sleep ────────────────────────────────────────────────────────────
+// ─── Konstanta ────────────────────────────────────────────────────────────────
+const AI_BASE_URL = process.env.PYTHON_AI_URL;
+const TIMEOUT_MS  = 90_000;
+const MAX_RETRIES = 4;
+const RETRY_DELAY = 8_000;
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// ─── Helper: warm-up Space sebelum request utama ─────────────────────────────
+// ─── Warm-up HuggingFace Space ────────────────────────────────────────────────
 async function warmUpSpace() {
   if (!AI_BASE_URL) {
     throw new Error('PYTHON_AI_URL belum di-set di environment variables Vercel!');
   }
-
   for (let i = 0; i < MAX_RETRIES; i++) {
     try {
-      console.log(`🔄 Warm-up HuggingFace Space (attempt ${i + 1}/${MAX_RETRIES})...`);
+      console.log(`🔄 Warm-up Space (attempt ${i + 1}/${MAX_RETRIES})...`);
       const res = await axios.get(`${AI_BASE_URL}/health`, { timeout: TIMEOUT_MS });
       if (res.data?.status === 'ready') {
         console.log('✅ HuggingFace Space siap!');
@@ -25,88 +29,91 @@ async function warmUpSpace() {
     } catch (err) {
       const status = err.response?.status;
       const detail = err.response?.data?.detail || err.message;
-      console.warn(`⚠️  Warm-up attempt ${i + 1} gagal (HTTP ${status}): ${detail}`);
-
-      // 503 = model masih loading → tunggu lalu retry
+      console.warn(`⚠️ Warm-up attempt ${i + 1} gagal (HTTP ${status}): ${detail}`);
       if (status === 503 && i < MAX_RETRIES - 1) {
-        console.log(`⏳ Menunggu ${RETRY_DELAY / 1000}s sebelum retry...`);
         await sleep(RETRY_DELAY);
         continue;
       }
-      // Error non-503 (network down, 404, dll) → langsung lempar
       if (status !== 503) throw err;
     }
   }
-  throw new Error(`HuggingFace Space tidak merespons setelah ${MAX_RETRIES}x retry. Coba lagi dalam 1–2 menit.`);
+  throw new Error(`HuggingFace Space tidak merespons setelah ${MAX_RETRIES}x retry.`);
 }
 
 // ─── Controller utama ─────────────────────────────────────────────────────────
 export const getCashflowPrediction = async (req, res) => {
   try {
-    // ✅ FIX 1: Ambil data dari database / req.body — BUKAN hardcode!
-    //    Sesuaikan bagian ini dengan struktur data di aplikasi kamu.
-    //    Contoh di bawah menggunakan req.body (untuk POST) atau
-    //    query params (untuk GET — sesuai route GET /cashflow kamu).
-    const {
-      cashflow_history  = [],
-      current_balance   = 0,
-      total_income      = 0,
-      total_expense     = 0,
-      period            = 30,       // default 30 hari
-    } = req.body ?? req.query ?? {};
-
-    // Validasi minimal sebelum kirim ke FastAPI
-    if (cashflow_history.length < 7) {
-      return res.status(400).json({
-        success: false,
-        message: 'cashflow_history minimal 7 data.',
-      });
+    // ✅ FIX UTAMA: Ambil userId dari JWT token (sudah di-decode oleh auth middleware)
+    const userId = req.user?.id || req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Token tidak valid.' });
     }
-    if (![30, 60, 90].includes(Number(period))) {
+
+    // ✅ Query transaksi milik user ini dari database
+    // Ambil semua transaksi, urutkan dari yang terlama agar urutan cashflow benar
+    const transactions = await prisma.transaction.findMany({
+      where:   { userId },
+      orderBy: { date: 'asc' },
+      select:  { amount: true, type: true, date: true },
+    });
+
+    if (transactions.length < 7) {
       return res.status(400).json({
         success: false,
-        message: 'period harus 30, 60, atau 90.',
+        message: 'Minimal 7 data transaksi diperlukan untuk prediksi AI. Tambah data transaksi terlebih dahulu.',
       });
     }
 
-    const cashflowLast7Days = cashflow_history.slice(-7);
+    // ✅ Hitung cashflow harian: INCOME = +amount, EXPENSE = -amount
+    const cashflow_history = transactions.map((t) =>
+      t.type === 'INCOME' ? Number(t.amount) : -Number(t.amount)
+    );
+
+    // Ambil summary keuangan user dari tabel yang sama
+    const totalIncome  = transactions
+      .filter((t) => t.type === 'INCOME')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const totalExpense = transactions
+      .filter((t) => t.type === 'EXPENSE')
+      .reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const currentBalance = totalIncome - totalExpense;
 
     const payload = {
-      cashflow:         cashflowLast7Days,
-      cashflow_history: cashflow_history,
-      period:           Number(period),
-      current_balance:  Number(current_balance),
-      total_income:     Number(total_income),
-      total_expense:    Number(total_expense),
+      cashflow:         cashflow_history.slice(-7),   // 7 hari terakhir
+      cashflow_history: cashflow_history,              // semua histori
+      period:           30,
+      current_balance:  currentBalance,
+      total_income:     totalIncome,
+      total_expense:    totalExpense,
     };
 
-    // ✅ FIX 2: Warm-up dulu agar tidak langsung dapat 503 cold start
+    // ✅ Warm-up Space lalu call FastAPI
     await warmUpSpace();
 
-    // ✅ FIX 3: Tambah timeout agar tidak hang selamanya
     const apiResponse = await axios.post(`${AI_BASE_URL}/forecast`, payload, {
       timeout: TIMEOUT_MS,
     });
     const aiResult = apiResponse.data;
 
-    // Map chart data
-    const chartActual = aiResult.chartActual.map(item => ({ x: item[0], y: item[1] }));
-    const chartPred   = aiResult.chartPred.map(item => ({ x: item[0], y: item[1] }));
+    const chartActual = aiResult.chartActual.map((item) => ({ x: item[0], y: item[1] }));
+    const chartPred   = aiResult.chartPred.map((item)   => ({ x: item[0], y: item[1] }));
 
     return res.json({
       success:  true,
       historis: chartActual,
       prediksi: chartPred,
       summary: {
-        saldoAkhir:   aiResult.saldoAkhir,
-        saldoChange:  aiResult.saldoChange,
-        pemasukan:    aiResult.pemasukan,
-        pengeluaran:  aiResult.pengeluaran,
-        accuracy:     aiResult.accuracy,
-        mape:         aiResult.mape,
-        mae:          aiResult.mae,
-        skenario:     aiResult.skenario,
-        timeline:     aiResult.timeline,
+        saldoAkhir:  aiResult.saldoAkhir,
+        saldoChange: aiResult.saldoChange,
+        pemasukan:   aiResult.pemasukan,
+        pengeluaran: aiResult.pengeluaran,
+        accuracy:    aiResult.accuracy,
+        mape:        aiResult.mape,
+        mae:         aiResult.mae,
+        skenario:    aiResult.skenario,
+        timeline:    aiResult.timeline,
       },
       insights: [
         {
@@ -125,14 +132,10 @@ export const getCashflowPrediction = async (req, res) => {
     });
 
   } catch (error) {
-    // ✅ FIX 4: Error handling lebih detail — beda respons untuk beda jenis error
     const status = error.response?.status;
     const detail = error.response?.data?.detail || error.message;
 
     console.error('❌ getCashflowPrediction error:', error.message);
-    if (error.response) {
-      console.error('   FastAPI response:', error.response.data);
-    }
 
     if (status === 503 || detail?.includes('belum dimuat') || detail?.includes('sedang dimuat')) {
       return res.status(503).json({
@@ -141,34 +144,17 @@ export const getCashflowPrediction = async (req, res) => {
         detail,
       });
     }
-
-    if (status === 400) {
-      return res.status(400).json({
-        success: false,
-        message: 'Data yang dikirim tidak valid.',
-        detail,
-      });
-    }
-
     if (error.code === 'ECONNABORTED') {
-      return res.status(504).json({
-        success: false,
-        message: 'Request ke server AI timeout (>90 detik). Coba lagi.',
-      });
+      return res.status(504).json({ success: false, message: 'Request ke server AI timeout. Coba lagi.' });
     }
-
     if (!error.response) {
       return res.status(502).json({
         success: false,
-        message: 'Tidak dapat terhubung ke server AI. Pastikan PYTHON_AI_URL benar dan HuggingFace Space aktif.',
+        message: 'Tidak dapat terhubung ke server AI. Cek PYTHON_AI_URL dan pastikan HuggingFace Space aktif.',
         detail: error.message,
       });
     }
 
-    return res.status(500).json({
-      success: false,
-      message: 'Server AI gagal merespons.',
-      detail,
-    });
+    return res.status(500).json({ success: false, message: 'Server AI gagal merespons.', detail });
   }
 };
