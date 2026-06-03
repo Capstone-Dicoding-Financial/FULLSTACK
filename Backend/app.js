@@ -8,6 +8,7 @@ import { swaggerSpec } from './utils/swagger.js';
 import swaggerUi from 'swagger-ui-express';
 
 const app = express();
+app.use(express.json());
 
 const allowedOrigins = [
   'https://fullstack-gcqi-8wyrgt6xo-capstonedicoding.vercel.app', 
