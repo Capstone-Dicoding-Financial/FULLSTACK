@@ -211,7 +211,8 @@ export default function AiInsights() {
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
-        const response = await fetch("http://localhost:5000/api/transactions", {
+        // SUDAH DIARAHKAN KE VERCEL PRODUCTION BACKEND
+        const response = await fetch("https://fullstack-backend-capstone.vercel.app/api/transactions", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -220,7 +221,6 @@ export default function AiInsights() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
         
-        // Sinkronisasi: Baca dari data.data yang dikirim backend
         setTransactions(data.data || []);
       } catch (err) {
         console.error("Gagal mengambil data untuk AI:", err);
