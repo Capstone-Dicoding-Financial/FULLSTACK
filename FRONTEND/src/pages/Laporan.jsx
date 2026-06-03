@@ -217,6 +217,7 @@ export default function Laporan() {
   const [aiInsight, setAiInsight]         = useState("Memuat rekomendasi AI...");
   const [isExporting, setIsExporting]     = useState(false);
   const [currentPage, setCurrentPage]     = useState(1);
+  const [showAiModal, setShowAiModal]     = useState(false);
   const ITEMS_PER_PAGE = 10;
   
   const getAuthHeaders = () => {
@@ -628,8 +629,8 @@ export default function Laporan() {
                   </div>
 
                   <div className="ai-footer-zone">
-                    <button className="insight-card-btn" onClick={() => alert("Konsultasi PDF AI sedang disiapkan!")}>
-                      Cetak Strategi Bisnis AI Lengkap →
+                    <button className="insight-card-btn" onClick={() => setShowAiModal(true)}>
+                      Lihat Analisis AI Lengkap →
                     </button>
                   </div>
                 </div>
@@ -749,6 +750,214 @@ export default function Laporan() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ─── AI INSIGHT & ANALYSIS MODAL ─────────────────────────────────── */}
+      {showAiModal && (
+        <div
+          className="ai-modal-overlay"
+          onClick={() => setShowAiModal(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(15,23,42,0.55)",
+            backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "16px",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: "20px",
+              width: "100%", maxWidth: "680px",
+              maxHeight: "88vh", overflowY: "auto",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
+              padding: "32px",
+              display: "flex", flexDirection: "column", gap: "24px",
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{
+                  width: "44px", height: "44px", borderRadius: "12px",
+                  background: "linear-gradient(135deg,#1a2a6c,#2563eb)",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div>
+                  <p style={{ fontWeight: "800", fontSize: "17px", color: "#0f172a", margin: 0 }}>Analisis AI Lengkap</p>
+                  <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>Berdasarkan data transaksi real • {period}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAiModal(false)}
+                style={{
+                  background: "#f1f5f9", border: "none", borderRadius: "8px",
+                  width: "32px", height: "32px", cursor: "pointer",
+                  fontSize: "18px", color: "#64748b", flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >×</button>
+            </div>
+
+            {/* Skor Finansial */}
+            <div style={{
+              background: "linear-gradient(135deg,#1a2a6c,#2563eb)",
+              borderRadius: "14px", padding: "20px 24px",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px",
+            }}>
+              <div>
+                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "12px", margin: "0 0 4px" }}>Skor Kesehatan Finansial</p>
+                <p style={{ color: "#fff", fontSize: "36px", fontWeight: "800", margin: 0, lineHeight: 1 }}>
+                  {profitMargin >= 20 ? "88" : profitMargin >= 10 ? "74" : profitMargin >= 0 ? "61" : "45"}
+                  <span style={{ fontSize: "16px", fontWeight: "500", opacity: 0.7 }}>/100</span>
+                </p>
+                <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "12px", margin: "6px 0 0" }}>
+                  {profitMargin >= 20 ? "🟢 Bisnis sangat sehat" : profitMargin >= 0 ? "🟡 Perlu optimasi" : "🔴 Butuh perhatian"}
+                </p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "11px", margin: "0 0 8px" }}>Ringkasan Periode</p>
+                {[
+                  { label: "Pemasukan", val: formatRp(totalMasuk), color: "#86efac" },
+                  { label: "Pengeluaran", val: formatRp(totalKeluar), color: "#fca5a5" },
+                  { label: "Laba Bersih", val: formatRp(laba), color: laba >= 0 ? "#86efac" : "#fca5a5" },
+                ].map(item => (
+                  <div key={item.label} style={{ display: "flex", justifyContent: "space-between", gap: "24px", marginBottom: "4px" }}>
+                    <span style={{ color: "rgba(255,255,255,0.65)", fontSize: "12px" }}>{item.label}</span>
+                    <span style={{ color: item.color, fontSize: "12px", fontWeight: "700" }}>{item.val}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Rekomendasi AI */}
+            <div>
+              <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                💡 Rekomendasi AI
+              </p>
+              <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "16px", borderLeft: "4px solid #2563eb" }}>
+                <p style={{ fontSize: "13.5px", color: "#334155", lineHeight: "1.7", margin: 0 }}>{aiInsight}</p>
+              </div>
+            </div>
+
+            {/* Analisis Rasio */}
+            <div>
+              <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                📊 Analisis Rasio Keuangan
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  {
+                    label: "Margin Keuntungan Bersih",
+                    val: `${profitMargin}%`,
+                    desc: profitMargin >= 20 ? "Profitabilitas sangat baik — pertahankan efisiensi ini." : profitMargin >= 0 ? "Keuntungan masih rendah. Evaluasi harga jual atau tekan biaya operasional." : "Bisnis mengalami kerugian. Segera audit pengeluaran terbesar.",
+                    color: profitMargin >= 20 ? "#16a34a" : profitMargin >= 0 ? "#d97706" : "#dc2626",
+                    bg: profitMargin >= 20 ? "#f0fdf4" : profitMargin >= 0 ? "#fffbeb" : "#fef2f2",
+                  },
+                  {
+                    label: "Rasio Pengeluaran",
+                    val: `${rasioPengeluaran}%`,
+                    desc: rasioPengeluaran <= 70 ? "Pengeluaran terkendali dengan baik." : "Biaya operasional terlalu tinggi. Identifikasi pos pengeluaran tidak efisien.",
+                    color: rasioPengeluaran <= 70 ? "#16a34a" : "#d97706",
+                    bg: rasioPengeluaran <= 70 ? "#f0fdf4" : "#fffbeb",
+                  },
+                  {
+                    label: "Likuiditas",
+                    val: `${likuiditas}x`,
+                    desc: likuiditas >= 1.5 ? "Arus kas sangat sehat — dana cukup untuk operasional." : likuiditas >= 1 ? "Likuiditas cukup, namun perlu dijaga agar tidak turun." : "Arus kas ketat. Pertimbangkan menambah sumber pemasukan.",
+                    color: likuiditas >= 1 ? "#16a34a" : "#dc2626",
+                    bg: likuiditas >= 1 ? "#f0fdf4" : "#fef2f2",
+                  },
+                ].map(r => (
+                  <div key={r.label} style={{ background: r.bg, borderRadius: "10px", padding: "14px 16px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                    <span style={{ fontWeight: "800", fontSize: "16px", color: r.color, flexShrink: 0, minWidth: "52px" }}>{r.val}</span>
+                    <div>
+                      <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", margin: "0 0 3px" }}>{r.label}</p>
+                      <p style={{ fontSize: "12.5px", color: "#475569", margin: 0, lineHeight: "1.5" }}>{r.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Saran Tindakan */}
+            <div>
+              <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                🎯 Saran Tindakan Prioritas
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                {[
+                  { icon: "💰", title: "Optimalkan Pemasukan", desc: `Dengan margin ${profitMargin}%, eksplorasi sumber pendapatan baru atau naikkan harga jual secara bertahap.` },
+                  { icon: "✂️", title: "Efisiensi Pengeluaran", desc: `Rasio pengeluaran ${rasioPengeluaran}% — audit kategori pengeluaran terbesar dan eliminasi biaya tidak produktif.` },
+                  { icon: "🏦", title: "Dana Cadangan", desc: `Sisihkan minimal 10-15% dari laba bersih ${formatRp(laba)} sebagai dana darurat operasional.` },
+                  { icon: "📈", title: "Pantau Arus Kas", desc: "Catat transaksi harian secara konsisten agar prediksi keuangan bulan berikutnya lebih akurat." },
+                ].map(s => (
+                  <div key={s.title} style={{ display: "flex", gap: "12px", padding: "12px 14px", background: "#f8fafc", borderRadius: "10px", alignItems: "flex-start" }}>
+                    <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>{s.icon}</span>
+                    <div>
+                      <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", margin: "0 0 2px" }}>{s.title}</p>
+                      <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0, lineHeight: "1.5" }}>{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Breakdown Kategori Terbesar */}
+            {categoryBreakdown.length > 0 && (
+              <div>
+                <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  📂 Top Pengeluaran per Kategori
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {categoryBreakdown.slice(0, 4).map(c => (
+                    <div key={c.label} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: c.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: "13px", color: "#334155", flex: 1 }}>{c.label}</span>
+                      <div style={{ flex: 2, background: "#f1f5f9", borderRadius: "99px", height: "6px", overflow: "hidden" }}>
+                        <div style={{ width: `${c.pct}%`, background: c.color, height: "100%", borderRadius: "99px" }} />
+                      </div>
+                      <span style={{ fontSize: "12px", color: "#64748b", width: "36px", textAlign: "right" }}>{c.pct}%</span>
+                      <span style={{ fontSize: "12.5px", fontWeight: "700", color: "#0f172a", width: "100px", textAlign: "right" }}>{formatRp(c.val)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div style={{ display: "flex", gap: "10px", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
+              <button
+                onClick={handleExportPDF}
+                style={{
+                  flex: 1, padding: "11px", borderRadius: "10px", border: "1.5px solid #e2e8f0",
+                  background: "#fff", color: "#334155", fontSize: "13px", fontWeight: "600",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Ekspor PDF
+              </button>
+              <button
+                onClick={() => setShowAiModal(false)}
+                style={{
+                  flex: 1, padding: "11px", borderRadius: "10px", border: "none",
+                  background: "linear-gradient(135deg,#1a2a6c,#2563eb)",
+                  color: "#fff", fontSize: "13px", fontWeight: "700", cursor: "pointer",
+                }}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
