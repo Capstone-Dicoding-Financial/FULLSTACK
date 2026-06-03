@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import "../css/Laporan.css";
 
 // 1. Definisikan Base URL API secara dinamis (otomatis fallback ke Vercel jika .env lokal kosong)
-const apiBaseUrl = import.meta.env.VITE_API_URL || "https://fullstack-jdtoajx9g-capstonedicoding.vercel.app";
+const apiBaseUrl = import.meta.env.VITE_API_URL || "https://fullstack-backend-capstone.vercel.app.";
 
 function fmtAxis(val) {
   const abs = Math.abs(val);
@@ -231,8 +231,8 @@ export default function Laporan() {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${apiBaseUrl}/api/transactions`, {
-          headers: getAuthHeaders(),
+          const response = await fetch("https://fullstack-backend-capstone.vercel.app/transactions", {
+        headers: getAuthHeaders(),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Gagal mengambil data");
@@ -251,9 +251,9 @@ export default function Laporan() {
   useEffect(() => {
     const fetchAIInsight = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}/api/transactions/insights`, {
-          headers: getAuthHeaders(),
-        });
+        const response = await fetch("https://fullstack-backend-capstone.vercel.app/transactions/insights", {
+      headers: getAuthHeaders(),
+      });
         const data = await response.json();
         setAiInsight(data.insight || "Gagal memproses rekomendasi.");
       } catch (err) {
