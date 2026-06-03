@@ -69,7 +69,7 @@ export default function ProfilUMKM() {
   const [loading, setLoading]   = useState(true);
 
   const userId  = localStorage.getItem("userId");
-  const API_URL = "http://localhost:5000/api/profile";
+  const API_URL = "https://fullstack-backend-capstone.vercel.app/api/profile";
 
   const [form, setForm] = useState({
     namaToko:     "",
@@ -315,8 +315,6 @@ export default function ProfilUMKM() {
         <div className="prof-right">
           <div className="prof-card">
             <SectionHead title="Informasi Usaha" desc="Data identitas dan kontak usaha kamu" />
-
-            {/* Identitas */}
             <div className="fields-section">
               <p className="fields-group-label">Identitas Usaha</p>
               <div className="fields-grid">
