@@ -141,6 +141,7 @@ export default function Transaksi() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [showModal, setShowModal] = useState(false);
+
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -152,7 +153,7 @@ export default function Transaksi() {
   const fetchTransactions = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/transactions", {
+      const response = await fetch("https://fullstack-backend-capstone.vercel.app/api/transactions", {
         headers: getAuthHeaders(),
       });
       const data = await response.json();
@@ -171,7 +172,7 @@ export default function Transaksi() {
 
   const handleSave = async (payload) => {
     try {
-      const response = await fetch("http://localhost:5000/api/transactions", {
+      const response = await fetch("https://fullstack-backend-capstone.vercel.app/api/transactions", {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -190,7 +191,7 @@ export default function Transaksi() {
   const handleDelete = async (id) => {
     if (!window.confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/transactions/${id}`, {
+      const response = await fetch(`https://fullstack-backend-capstone.vercel.app/api/transactions/${id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
