@@ -35,7 +35,8 @@ function BarChart({ data, maxVal }) {
         viewBox={`0 0 ${W} ${totalH}`}
         preserveAspectRatio="xMidYMid meet"
         className="barchart-svg"
-      >
+        style={{ width: "100%", height: "auto" }}>
+
         {ticks.map((t) => {
           const y   = PAD_T + (1 - t) * plotH;
           const val = Math.round(safeMax * t);
@@ -49,7 +50,9 @@ function BarChart({ data, maxVal }) {
               <text
                 x={LABEL_W - 6} y={y + 4}
                 textAnchor="end"
-                className="chart-tick-text"
+                fontSize="10"
+                fill="#94a3b8"
+                fontFamily="Plus Jakarta Sans, sans-serif"
               >
                 {fmtAxis(val)}
               </text>
@@ -80,7 +83,9 @@ function BarChart({ data, maxVal }) {
               />
               <text
                 x={sliceCenter.toFixed(1)} y={PAD_T + plotH + 18}
-                textAnchor="middle" className="chart-label-text"
+                textAnchor="middle" fontSize="10"
+                fill="#94a3b8"
+                fontFamily="Plus Jakarta Sans, sans-serif"
               >
                 {d.bulan}
               </text>
@@ -91,10 +96,10 @@ function BarChart({ data, maxVal }) {
 
       <div className="barchart-legend">
         <span className="bcleg-item">
-          <span className="bcleg-dot bcleg-blue" />Pemasukan
+          <span className="bcleg-dot" style={{ background: "#2563eb" }} />Pemasukan
         </span>
         <span className="bcleg-item">
-          <span className="bcleg-dot bcleg-red" />Pengeluaran
+          <span className="bcleg-dot" style={{ background: "#ef4444" }} />Pengeluaran
         </span>
       </div>
     </div>
@@ -129,6 +134,7 @@ function LineChart({ dataPoints, labels, maxVal, minVal }) {
         viewBox={`0 0 ${W} ${totalH}`}
         preserveAspectRatio="xMidYMid meet"
         className="linechart-svg"
+        style={{ width: "100%", height: "auto" }}
       >
         <defs>
           <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
@@ -149,8 +155,9 @@ function LineChart({ dataPoints, labels, maxVal, minVal }) {
               <text
                 x={LABEL_W - 6}
                 y={Math.min(Math.max(y + 4, PAD_T + 4), PAD_T + plotH)}
-                textAnchor="end"
-                className={val < 0 ? "chart-tick-neg" : "chart-tick-text"}
+                textAnchor="end" fontSize="10"
+                fill={val < 0 ? "#ef4444" : "#94a3b8"}
+                fontFamily="Plus Jakarta Sans, sans-serif"
               >
                 {fmtAxis(Math.round(val))}
               </text>
@@ -177,7 +184,8 @@ function LineChart({ dataPoints, labels, maxVal, minVal }) {
             <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r="4"
               fill="#fff" stroke="#22c55e" strokeWidth="2" />
             <text x={p.x.toFixed(1)} y={PAD_T + plotH + 18}
-              textAnchor="middle" className="chart-label-text">
+              textAnchor="middle" fontSize="10"
+              fill="#94a3b8" fontFamily="Plus Jakarta Sans, sans-serif">
               {labels[i]}
             </text>
           </g>
@@ -390,9 +398,6 @@ export default function Laporan() {
     }
   };
 
-  const modalScore = profitMargin >= 20 ? "88" : profitMargin >= 10 ? "74" : profitMargin >= 0 ? "61" : "45";
-  const modalStatus = profitMargin >= 20 ? "🟢 Bisnis sangat sehat" : profitMargin >= 0 ? "🟡 Perlu optimasi" : "🔴 Butuh perhatian";
-
   return (
     <div className="laporan-page" id="printable-report-area">
       {/* Topbar Area */}
@@ -450,8 +455,8 @@ export default function Laporan() {
           </div>
           <div>
             <p className="lap-scard-label">Laba Bersih</p>
-            <p className={`lap-scard-val ${laba < 0 ? "text-danger" : "text-success"}`}>{formatRp(laba)}</p>
-            <p className={laba < 0 ? "text-danger" : "text-success"}>
+            <p className="lap-scard-val" style={{ color: laba < 0 ? "#dc2626" : "#16a34a" }}>{formatRp(laba)}</p>
+            <p className="lap-scard-trend" style={{ color: laba < 0 ? "#dc2626" : "#16a34a" }}>
               {laba >= 0 ? "↑ Surplus Bisnis" : "↓ Defisit Bisnis"}
             </p>
           </div>
@@ -483,15 +488,15 @@ export default function Laporan() {
 
       {/* Main Content Area */}
       {loading ? (
-        <div className="lap-card text-center-padded">
-          <p className="text-muted">Memuat data keuangan usaha...</p>
+        <div className="lap-card" style={{ textAlign: "center", padding: "40px" }}>
+          <p style={{ color: "#64748b" }}>Memuat data keuangan usaha...</p>
         </div>
       ) : (
         <div className="lap-content">
           {activeTab === "ringkasan" && (
             <div className="lap-grid-2">
               
-              {/* KOLOM KIRI (Grafik & Breakdown) */}
+              {/* KOREKSI: KOLOM KIRI (Grafik & Breakdown) */}
               <div className="laporan-left-column">
                 <div className="lap-card">
                   <div className="lap-card-head">
@@ -521,7 +526,7 @@ export default function Laporan() {
                   </div>
                   <div className="breakdown-grid">
                     {categoryBreakdown.length === 0 ? (
-                      <p className="text-empty-state">Belum ada data pengeluaran.</p>
+                      <p style={{ fontSize: "13px", color: "#94a3b8" }}>Belum ada data pengeluaran.</p>
                     ) : (
                       categoryBreakdown.map(c => (
                         <div key={c.label} className="breakdown-row">
@@ -543,7 +548,7 @@ export default function Laporan() {
                 </div>
               </div>
 
-              {/* KOLOM KANAN (Rasio Keuangan & AI Insight Diupgrade) */}
+              {/* KOREKSI: KOLOM KANAN (Rasio Keuangan & AI Insight Diupgrade) */}
               <div className="laporan-right-column">
                 <div className="lap-card">
                   <div className="lap-card-head">
@@ -588,7 +593,7 @@ export default function Laporan() {
                   </div>
                 </div>
 
-                {/* KARTU AI BARU */}
+                {/* KARTU AI BARU YANG DIPENUHI KE BAWAH */}
                 <div className="lap-card lap-card-insight upgraded-ai-card">
                   <div className="ai-header-zone">
                     <div className="insight-icon-wrap">
@@ -667,13 +672,13 @@ export default function Laporan() {
                       <th>Tanggal</th>
                       <th>Kategori</th>
                       <th>Keterangan</th>
-                      <th className="text-right">Jumlah</th>
+                      <th style={{ textAlign: "right" }}>Jumlah</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedTransactions.length === 0 ? (
                       <tr>
-                        <td colSpan="4" className="text-center-muted-padded">Tidak ada transaksi ditemukan.</td>
+                        <td colSpan="4" style={{ textAlign: "center", padding: "20px", color: "#94a3b8" }}>Tidak ada transaksi ditemukan.</td>
                       </tr>
                     ) : (
                       paginatedTransactions.map(t => (
@@ -681,7 +686,7 @@ export default function Laporan() {
                           <td>{formatTanggal(t.date)}</td>
                           <td><span className="trx-cat-badge">{t.category}</span></td>
                           <td>{t.description || "-"}</td>
-                          <td className={`text-right font-semibold ${t.type === "INCOME" ? "text-success-flat" : "text-danger-flat"}`}>
+                          <td style={{ textAlign: "right", fontWeight: "600", color: t.type === "INCOME" ? "#16a34a" : "#dc2626" }}>
                             {t.type === "INCOME" ? "+" : "-"}{formatRp(t.amount)}
                           </td>
                         </tr>
@@ -691,9 +696,9 @@ export default function Laporan() {
                 </table>
               </div>
 
-              <div className="trx-pagination">
-                <span className="pagination-info">Menampilkan {startNumber}-{endNumber} dari {filtered.length} transaksi</span>
-                <div className="pagination-buttons">
+              <div className="trx-pagination" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>Menampilkan {startNumber}-{endNumber} dari {filtered.length} transaksi</span>
+                <div style={{ display: "flex", gap: "6px" }}>
                   <button className="trx-select" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>Sebelumnya</button>
                   <button className="trx-select" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}>Selanjutnya</button>
                 </div>
@@ -703,41 +708,41 @@ export default function Laporan() {
 
           {activeTab === "laba-rugi" && (
             <div className="lap-card">
-              <div className="lap-card-head header-bordered">
+              <div className="lap-card-head" style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "12px", marginBottom: "16px" }}>
                 <p className="lap-card-title">Laporan Laba Rugi Terperinci</p>
                 <p className="lap-card-desc">Periode Berjalan: {period}</p>
               </div>
 
-              <div className="laba-rugi-wrapper">
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 <div>
-                  <h3 className="lr-section-title lr-income">1. Pendapatan Usaha</h3>
+                  <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#16a34a", marginBottom: "8px", textTransform: "uppercase" }}>1. Pendapatan Usaha</h3>
                   {incomeBreakdown.map(i => (
-                    <div key={i.label} className="lr-row-dashed">
-                      <span className="text-slate">Pendapatan {i.label}</span>
-                      <span className="lr-row-val">{formatRp(i.val)}</span>
+                    <div key={i.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", padding: "6px 0", borderBottom: "0.5px dashed #f1f5f9" }}>
+                      <span style={{ color: "#475569" }}>Pendapatan {i.label}</span>
+                      <span style={{ fontWeight: "600", color: "#1e293b" }}>{formatRp(i.val)}</span>
                     </div>
                   ))}
-                  <div className="lr-total-box">
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "14px", color: "#1e293b", background: "#f8fafc", padding: "10px", borderRadius: "6px", marginTop: "8px" }}>
                     <span>TOTAL PENDAPATAN</span>
                     <span>{formatRp(totalMasuk)}</span>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="lr-section-title lr-expense">2. Beban Operasional</h3>
+                  <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#dc2626", marginBottom: "8px", textTransform: "uppercase" }}>2. Beban Operasional</h3>
                   {expenseBreakdown.map(e => (
-                    <div key={e.label} className="lr-row-dashed">
-                      <span className="text-slate">Beban Biaya {e.label}</span>
-                      <span className="lr-row-val">{formatRp(e.val)}</span>
+                    <div key={e.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", padding: "6px 0", borderBottom: "0.5px dashed #f1f5f9" }}>
+                      <span style={{ color: "#475569" }}>Beban Biaya {e.label}</span>
+                      <span style={{ fontWeight: "600", color: "#1e293b" }}>{formatRp(e.val)}</span>
                     </div>
                   ))}
-                  <div className="lr-total-box">
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "14px", color: "#1e293b", background: "#f8fafc", padding: "10px", borderRadius: "6px", marginTop: "8px" }}>
                     <span>TOTAL BEBAN OPERASIONAL</span>
                     <span>{formatRp(totalKeluar)}</span>
                   </div>
                 </div>
 
-                <div className={`lr-final-box ${laba >= 0 ? "lr-surplus" : "lr-deficit"}`}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "800", fontSize: "15px", color: laba >= 0 ? "#16a34a" : "#dc2626", background: laba >= 0 ? "#e8f5e9" : "#ffebee", padding: "12px", borderRadius: "8px", marginTop: "12px", border: laba >= 0 ? "1px solid #c8e6c9" : "1px solid #ffcdd2" }}>
                   <span>{laba >= 0 ? "LABA BERSIH (SURPLUS)" : "RUGI BERSIH (DEFISIT)"}</span>
                   <span>{formatRp(laba)}</span>
                 </div>
@@ -749,44 +754,82 @@ export default function Laporan() {
 
       {/* ─── AI INSIGHT & ANALYSIS MODAL ─────────────────────────────────── */}
       {showAiModal && (
-        <div className="ai-modal-overlay" onClick={() => setShowAiModal(false)}>
-          <div className="ai-modal-box" onClick={e => e.stopPropagation()}>
-            
+        <div
+          className="ai-modal-overlay"
+          onClick={() => setShowAiModal(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            background: "rgba(15,23,42,0.55)",
+            backdropFilter: "blur(4px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "16px",
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#fff", borderRadius: "20px",
+              width: "100%", maxWidth: "680px",
+              maxHeight: "88vh", overflowY: "auto",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
+              padding: "32px",
+              display: "flex", flexDirection: "column", gap: "24px",
+            }}
+          >
             {/* Header */}
-            <div className="ai-modal-header">
-              <div className="ai-modal-header-left">
-                <div className="ai-modal-icon">
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{
+                  width: "44px", height: "44px", borderRadius: "12px",
+                  background: "linear-gradient(135deg,#1a2a6c,#2563eb)",
+                  display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}>
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
                 </div>
                 <div>
-                  <p className="ai-modal-title">Analisis AI Lengkap</p>
-                  <p className="ai-modal-subtitle">Berdasarkan data transaksi real • {period}</p>
+                  <p style={{ fontWeight: "800", fontSize: "17px", color: "#0f172a", margin: 0 }}>Analisis AI Lengkap</p>
+                  <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>Berdasarkan data transaksi real • {period}</p>
                 </div>
               </div>
-              <button className="ai-modal-close" onClick={() => setShowAiModal(false)}>×</button>
+              <button
+                onClick={() => setShowAiModal(false)}
+                style={{
+                  background: "#f1f5f9", border: "none", borderRadius: "8px",
+                  width: "32px", height: "32px", cursor: "pointer",
+                  fontSize: "18px", color: "#64748b", flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >×</button>
             </div>
 
             {/* Skor Finansial */}
-            <div className="ai-modal-score-banner">
+            <div style={{
+              background: "linear-gradient(135deg,#1a2a6c,#2563eb)",
+              borderRadius: "14px", padding: "20px 24px",
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px",
+            }}>
               <div>
-                <p className="ai-modal-score-label">Skor Kesehatan Finansial</p>
-                <p className="ai-modal-score-number">
-                  {modalScore}<span>/100</span>
+                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: "12px", margin: "0 0 4px" }}>Skor Kesehatan Finansial</p>
+                <p style={{ color: "#fff", fontSize: "36px", fontWeight: "800", margin: 0, lineHeight: 1 }}>
+                  {profitMargin >= 20 ? "88" : profitMargin >= 10 ? "74" : profitMargin >= 0 ? "61" : "45"}
+                  <span style={{ fontSize: "16px", fontWeight: "500", opacity: 0.7 }}>/100</span>
                 </p>
-                <p className="ai-modal-score-status">{modalStatus}</p>
+                <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "12px", margin: "6px 0 0" }}>
+                  {profitMargin >= 20 ? "🟢 Bisnis sangat sehat" : profitMargin >= 0 ? "🟡 Perlu optimasi" : "🔴 Butuh perhatian"}
+                </p>
               </div>
-              <div className="ai-modal-score-right">
-                <p className="ai-modal-score-period-label">Ringkasan Periode</p>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "11px", margin: "0 0 8px" }}>Ringkasan Periode</p>
                 {[
-                  { label: "Pemasukan", val: formatRp(totalMasuk), colorClass: "text-green-light" },
-                  { label: "Pengeluaran", val: formatRp(totalKeluar), colorClass: "text-red-light" },
-                  { label: "Laba Bersih", val: formatRp(laba), colorClass: laba >= 0 ? "text-green-light" : "text-red-light" },
+                  { label: "Pemasukan", val: formatRp(totalMasuk), color: "#86efac" },
+                  { label: "Pengeluaran", val: formatRp(totalKeluar), color: "#fca5a5" },
+                  { label: "Laba Bersih", val: formatRp(laba), color: laba >= 0 ? "#86efac" : "#fca5a5" },
                 ].map(item => (
-                  <div key={item.label} className="ai-modal-score-row">
-                    <span className="ai-modal-score-row-label">{item.label}</span>
-                    <span className={`ai-modal-score-row-val ${item.colorClass}`}>{item.val}</span>
+                  <div key={item.label} style={{ display: "flex", justifyContent: "space-between", gap: "24px", marginBottom: "4px" }}>
+                    <span style={{ color: "rgba(255,255,255,0.65)", fontSize: "12px" }}>{item.label}</span>
+                    <span style={{ color: item.color, fontSize: "12px", fontWeight: "700" }}>{item.val}</span>
                   </div>
                 ))}
               </div>
@@ -794,44 +837,48 @@ export default function Laporan() {
 
             {/* Rekomendasi AI */}
             <div>
-              <p className="ai-modal-section-title">💡 Rekomendasi AI</p>
-              <div className="ai-modal-insight-box">
-                <p className="ai-modal-insight-text">{aiInsight}</p>
+              <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                💡 Rekomendasi AI
+              </p>
+              <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "16px", borderLeft: "4px solid #2563eb" }}>
+                <p style={{ fontSize: "13.5px", color: "#334155", lineHeight: "1.7", margin: 0 }}>{aiInsight}</p>
               </div>
             </div>
 
             {/* Analisis Rasio */}
             <div>
-              <p className="ai-modal-section-title">📊 Analisis Rasio Keuangan</p>
-              <div className="ai-modal-rasio-list">
+              <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                📊 Analisis Rasio Keuangan
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
                   {
                     label: "Margin Keuntungan Bersih",
                     val: `${profitMargin}%`,
                     desc: profitMargin >= 20 ? "Profitabilitas sangat baik — pertahankan efisiensi ini." : profitMargin >= 0 ? "Keuntungan masih rendah. Evaluasi harga jual atau tekan biaya operasional." : "Bisnis mengalami kerugian. Segera audit pengeluaran terbesar.",
-                    statusClass: profitMargin >= 20 ? "rasio-item-good" : profitMargin >= 0 ? "rasio-item-warn" : "rasio-item-bad",
-                    valColorClass: profitMargin >= 20 ? "text-green-dark" : profitMargin >= 0 ? "text-orange-dark" : "text-red-dark"
+                    color: profitMargin >= 20 ? "#16a34a" : profitMargin >= 0 ? "#d97706" : "#dc2626",
+                    bg: profitMargin >= 20 ? "#f0fdf4" : profitMargin >= 0 ? "#fffbeb" : "#fef2f2",
                   },
                   {
                     label: "Rasio Pengeluaran",
                     val: `${rasioPengeluaran}%`,
                     desc: rasioPengeluaran <= 70 ? "Pengeluaran terkendali dengan baik." : "Biaya operasional terlalu tinggi. Identifikasi pos pengeluaran tidak efisien.",
-                    statusClass: rasioPengeluaran <= 70 ? "rasio-item-good" : "rasio-item-warn",
-                    valColorClass: rasioPengeluaran <= 70 ? "text-green-dark" : "text-orange-dark"
+                    color: rasioPengeluaran <= 70 ? "#16a34a" : "#d97706",
+                    bg: rasioPengeluaran <= 70 ? "#f0fdf4" : "#fffbeb",
                   },
                   {
                     label: "Likuiditas",
                     val: `${likuiditas}x`,
                     desc: likuiditas >= 1.5 ? "Arus kas sangat sehat — dana cukup untuk operasional." : likuiditas >= 1 ? "Likuiditas cukup, namun perlu dijaga agar tidak turun." : "Arus kas ketat. Pertimbangkan menambah sumber pemasukan.",
-                    statusClass: likuiditas >= 1 ? "rasio-item-good" : "rasio-item-bad",
-                    valColorClass: likuiditas >= 1 ? "text-green-dark" : "text-red-dark"
+                    color: likuiditas >= 1 ? "#16a34a" : "#dc2626",
+                    bg: likuiditas >= 1 ? "#f0fdf4" : "#fef2f2",
                   },
                 ].map(r => (
-                  <div key={r.label} className={`ai-modal-rasio-item ${r.statusClass}`}>
-                    <span className={`ai-modal-rasio-val ${r.valColorClass}`}>{r.val}</span>
+                  <div key={r.label} style={{ background: r.bg, borderRadius: "10px", padding: "14px 16px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                    <span style={{ fontWeight: "800", fontSize: "16px", color: r.color, flexShrink: 0, minWidth: "52px" }}>{r.val}</span>
                     <div>
-                      <p className="ai-modal-rasio-label">{r.label}</p>
-                      <p className="ai-modal-rasio-desc">{r.desc}</p>
+                      <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", margin: "0 0 3px" }}>{r.label}</p>
+                      <p style={{ fontSize: "12.5px", color: "#475569", margin: 0, lineHeight: "1.5" }}>{r.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -840,19 +887,21 @@ export default function Laporan() {
 
             {/* Saran Tindakan */}
             <div>
-              <p className="ai-modal-section-title">🎯 Saran Tindakan Prioritas</p>
-              <div className="ai-modal-saran-list">
+              <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                🎯 Saran Tindakan Prioritas
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {[
                   { icon: "💰", title: "Optimalkan Pemasukan", desc: `Dengan margin ${profitMargin}%, eksplorasi sumber pendapatan baru atau naikkan harga jual secara bertahap.` },
                   { icon: "✂️", title: "Efisiensi Pengeluaran", desc: `Rasio pengeluaran ${rasioPengeluaran}% — audit kategori pengeluaran terbesar dan eliminasi biaya tidak produktif.` },
                   { icon: "🏦", title: "Dana Cadangan", desc: `Sisihkan minimal 10-15% dari laba bersih ${formatRp(laba)} sebagai dana darurat operasional.` },
                   { icon: "📈", title: "Pantau Arus Kas", desc: "Catat transaksi harian secara konsisten agar prediksi keuangan bulan berikutnya lebih akurat." },
                 ].map(s => (
-                  <div key={s.title} className="ai-modal-saran-item">
-                    <span className="ai-modal-saran-icon">{s.icon}</span>
+                  <div key={s.title} style={{ display: "flex", gap: "12px", padding: "12px 14px", background: "#f8fafc", borderRadius: "10px", alignItems: "flex-start" }}>
+                    <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>{s.icon}</span>
                     <div>
-                      <p className="ai-modal-saran-title">{s.title}</p>
-                      <p className="ai-modal-saran-desc">{s.desc}</p>
+                      <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", margin: "0 0 2px" }}>{s.title}</p>
+                      <p style={{ fontSize: "12.5px", color: "#64748b", margin: 0, lineHeight: "1.5" }}>{s.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -862,17 +911,19 @@ export default function Laporan() {
             {/* Breakdown Kategori Terbesar */}
             {categoryBreakdown.length > 0 && (
               <div>
-                <p className="ai-modal-section-title">📂 Top Pengeluaran per Kategori</p>
-                <div className="ai-modal-cat-list">
+                <p style={{ fontWeight: "700", fontSize: "13px", color: "#0f172a", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  📂 Top Pengeluaran per Kategori
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {categoryBreakdown.slice(0, 4).map(c => (
-                    <div key={c.label} className="ai-modal-cat-item">
-                      <span className="ai-modal-cat-dot" style={{ background: c.color }} />
-                      <span className="ai-modal-cat-name">{c.label}</span>
-                      <div className="ai-modal-cat-bar-wrap">
-                        <div className="ai-modal-cat-bar-fill" style={{ width: `${c.pct}%`, background: c.color }} />
+                    <div key={c.label} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: c.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: "13px", color: "#334155", flex: 1 }}>{c.label}</span>
+                      <div style={{ flex: 2, background: "#f1f5f9", borderRadius: "99px", height: "6px", overflow: "hidden" }}>
+                        <div style={{ width: `${c.pct}%`, background: c.color, height: "100%", borderRadius: "99px" }} />
                       </div>
-                      <span className="ai-modal-cat-pct">{c.pct}%</span>
-                      <span className="ai-modal-cat-val">{formatRp(c.val)}</span>
+                      <span style={{ fontSize: "12px", color: "#64748b", width: "36px", textAlign: "right" }}>{c.pct}%</span>
+                      <span style={{ fontSize: "12.5px", fontWeight: "700", color: "#0f172a", width: "100px", textAlign: "right" }}>{formatRp(c.val)}</span>
                     </div>
                   ))}
                 </div>
@@ -880,14 +931,28 @@ export default function Laporan() {
             )}
 
             {/* Footer */}
-            <div className="ai-modal-footer">
-              <button className="ai-modal-btn-pdf" onClick={handleExportPDF}>
+            <div style={{ display: "flex", gap: "10px", paddingTop: "8px", borderTop: "1px solid #f1f5f9" }}>
+              <button
+                onClick={handleExportPDF}
+                style={{
+                  flex: 1, padding: "11px", borderRadius: "10px", border: "1.5px solid #e2e8f0",
+                  background: "#fff", color: "#334155", fontSize: "13px", fontWeight: "600",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                }}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
                 Ekspor PDF
               </button>
-              <button className="ai-modal-btn-close" onClick={() => setShowAiModal(false)}>
+              <button
+                onClick={() => setShowAiModal(false)}
+                style={{
+                  flex: 1, padding: "11px", borderRadius: "10px", border: "none",
+                  background: "linear-gradient(135deg,#1a2a6c,#2563eb)",
+                  color: "#fff", fontSize: "13px", fontWeight: "700", cursor: "pointer",
+                }}
+              >
                 Tutup
               </button>
             </div>
