@@ -446,3 +446,141 @@
   transition: background 0.15s;
 }
 .modal-footer .btn-save:hover { background: #1d5de8; }
+/* ── Tambahan class yang dipakai JSX ──────────────────────── */
+
+/* stat-row = alias stat-grid */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* warna nilai stat card */
+.text-green { color: #16a34a; }
+.text-red   { color: #ef4444; }
+.text-blue  { color: #2d6ef7; }
+
+/* btn-primary-custom = alias btn-primary */
+.btn-primary-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #2d6ef7;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+.btn-primary-custom:hover { background: #1d5de8; }
+
+/* badge warna (badge-green, badge-red) */
+.badge-green { background: #f0fdf4; color: #15803d; }
+.badge-red   { background: #fef2f2; color: #b91c1c; }
+
+/* table controls area */
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 20px 0;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.search-box input {
+  padding: 8px 14px;
+  border: 0.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  min-width: 240px;
+  outline: none;
+  font-family: inherit;
+  color: #111827;
+  transition: box-shadow 0.15s;
+}
+.search-box input:focus { box-shadow: 0 0 0 3px rgba(45,110,247,0.15); }
+
+/* table wrapper scroll */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+/* delete button */
+.btn-delete {
+  padding: 4px 10px;
+  background: #fef2f2;
+  color: #ef4444;
+  border: 0.5px solid #fee2e2;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btn-delete:hover { background: #fee2e2; }
+
+/* modal title */
+.modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 20px;
+}
+
+/* table footer layout */
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-top: 0.5px solid #f3f4f6;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* amount align right */
+.table-amount { text-align: right; }
+
+/* radio group */
+.radio-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 4px;
+}
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+}
+
+/* modal actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* description cell truncate */
+.cat-tag-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #9ca3af;
+}
