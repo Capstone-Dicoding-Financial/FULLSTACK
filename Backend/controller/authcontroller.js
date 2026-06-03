@@ -59,8 +59,10 @@ export const login = async (req, res) => {
     });
 
   } catch (error) {
-    return res.status(500).json({ error: "Terjadi kesalahan pada server" });
+  console.error("🔥 DATABASE/LOGIN ERROR AKUT:", error);
+  return res.status(500).json({ error: "Terjadi kesalahan pada server" });
   }
+
 };
 
 // FORGOT PASSWORD
