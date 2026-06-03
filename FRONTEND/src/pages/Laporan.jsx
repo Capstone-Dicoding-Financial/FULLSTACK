@@ -200,6 +200,7 @@ function formatRp(val) {
   const abs = Math.abs(val || 0);
   return `Rp ${abs.toLocaleString("id-ID")}`;
 }
+
 function formatTanggal(str) {
   if (!str) return "-";
   return new Date(str).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
@@ -230,8 +231,7 @@ export default function Laporan() {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        // FIX: Menambahkan /api/ sebelum rute transaksi
-        const response = await fetch("https://fullstack-backend-capstone.vercel.app/api/transactions", {
+        const response = await fetch(`${apiBaseUrl}/api/transactions`, {
           headers: getAuthHeaders(),
         });
         const data = await response.json();
@@ -250,8 +250,7 @@ export default function Laporan() {
   useEffect(() => {
     const fetchAIInsight = async () => {
       try {
-        // FIX: Menambahkan /api/ sebelum rute insights
-        const response = await fetch("https://fullstack-backend-capstone.vercel.app/api/transactions/insights", {
+        const response = await fetch(`${apiBaseUrl}/api/transactions/insights`, {
           headers: getAuthHeaders(),
         });
         const data = await response.json();
@@ -335,15 +334,15 @@ export default function Laporan() {
   }, [transactions]);
 
   const profitMargin      = totalMasuk > 0 ? ((laba / totalMasuk) * 100).toFixed(1) : 0;
-  const rasioPengeluaran  = totalMasuk > 0 ? ((totalKeluar / totalMasuk) * 100).toFixed(1) : 0;
-  const likuiditas        = totalKeluar > 0 ? (totalMasuk / totalKeluar).toFixed(1) : 0;
-  const pertumbuhan       = 8.2;
-  
+  const rasioPengeluaran = totalMasuk > 0 ? ((totalKeluar / totalMasuk) * 100).toFixed(1) : 0;
+  const likuiditas       = totalKeluar > 0 ? (totalMasuk / totalKeluar).toFixed(1) : 0;
+  const pertumbuhan      = 8.2; 
+
   const allKategori = ["semua", ...new Set(transactions.map(t => t.category || "Lain-lain"))];
-  
+
   const filtered = transactions.filter(t => {
-    const matchTipe   = filterTipe === "semua" || t.type === filterTipe;
-    const matchKat    = filterKategori === "semua" || (t.category || "Lain-lain") === filterKategori;
+    const matchTipe = filterTipe === "semua" || t.type === filterTipe;
+    const matchKat = filterKategori === "semua" || (t.category || "Lain-lain") === filterKategori;
     const matchSearch = (t.description || "").toLowerCase().includes(search.toLowerCase());
     return matchTipe && matchKat && matchSearch;
   });
@@ -368,13 +367,12 @@ export default function Laporan() {
     const targetElement = document.getElementById("printable-report-area");
     const executeExport = () => {
       const opt = {
-        margin:       0.3,
-        filename:     `Laporan_Keuangan_UMKM_${period.replace(" ", "_")}.pdf`,
-        image:        { type: "jpeg", quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: "in", format: "letter", orientation: "portrait" }
+        margin: 0.3,
+        filename: `Laporan_Keuangan_UMKM_${period.replace(" ", "_")}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: "in", format: "letter", orientation: "portrait" }
       };
-
       window.html2pdf()
         .set(opt)
         .from(targetElement)
@@ -401,359 +399,358 @@ export default function Laporan() {
   };
 
   return (
-    <div className="laporan-page">
-      <div className="lap-topbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div className="laporan-page" id="printable-report-area">
+      {/* Topbar Area */}
+      <div className="lap-topbar">
         <div>
           <h1 className="lap-title">Laporan Keuangan</h1>
           <p className="lap-sub">Rekap lengkap pemasukan, pengeluaran, dan laba rugi usaha berbasis real data.</p>
         </div>
-
-        <button 
-          onClick={handleExportPDF} 
-          disabled={isExporting || loading}
-          className="trx-select"
-          style={{
-            background: "#2563eb",
-            color: "#fff",
-            padding: "10px 16px",
-            fontWeight: "600",
-            borderRadius: "8px",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            opacity: (isExporting || loading) ? 0.6 : 1,
-            boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)"
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          {isExporting ? "Memproses PDF..." : "Export PDF"}
-        </button>
+        <div className="lap-topbar-actions">
+          <div className="period-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            {period}
+          </div>
+          <button onClick={handleExportPDF} disabled={isExporting || loading} className="lap-export-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {isExporting ? "Mengekspor..." : "Ekspor PDF"}
+          </button>
+        </div>
       </div>
-      
-      <div id="printable-report-area">
-        <div className="lap-summary">
-          <div className="lap-scard lap-scard-blue">
-            <div className="lap-scard-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                <polyline points="17 6 23 6 23 12" />
-              </svg>
-            </div>
-            <div>
-              <p className="lap-scard-label">Total Pemasukan</p>
-              <p className="lap-scard-val">{formatRp(totalMasuk)}</p>
-            </div>
-          </div>
 
-          <div className="lap-scard lap-scard-red">
-            <div className="lap-scard-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
-                <polyline points="17 18 23 18 23 12" />
-              </svg>
-            </div>
-            <div>
-              <p className="lap-scard-label">Total Pengeluaran</p>
-              <p className="lap-scard-val">{formatRp(totalKeluar)}</p>
-            </div>
+      {/* Summary Cards */}
+      <div className="lap-summary">
+        <div className="lap-scard lap-scard-blue">
+          <div className="lap-scard-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           </div>
-
-          <div className="lap-scard lap-scard-green">
-            <div className="lap-scard-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="1" x2="12" y2="23" />
-                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-              </svg>
-            </div>
-            <div>
-              <p className="lap-scard-label">Laba Bersih</p>
-              <p className="lap-scard-val">{formatRp(laba)}</p>
-            </div>
-          </div>
-
-          <div className="lap-scard lap-scard-purple">
-            <div className="lap-scard-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="1" y="4" width="22" height="16" rx="2" />
-                <line x1="1" y1="10" x2="23" y2="10" />
-              </svg>
-            </div>
-            <div>
-              <p className="lap-scard-label">Saldo Akhir</p>
-              <p className="lap-scard-val">{formatRp(saldoAkhir)}</p>
-            </div>
+          <div>
+            <p className="lap-scard-label">Total Pemasukan</p>
+            <p className="lap-scard-val">{formatRp(totalMasuk)}</p>
+            <p className="lap-scard-trend trend-up">↑ Berhasil Terdata</p>
           </div>
         </div>
-
-        <div className="lap-tabs">
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              className={`lap-tab ${activeTab === t.id ? "lap-tab-active" : ""}`}
-              onClick={() => setActiveTab(t.id)}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="lap-scard lap-scard-red">
+          <div className="lap-scard-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div>
+            <p className="lap-scard-label">Total Pengeluaran</p>
+            <p className="lap-scard-val">{formatRp(totalKeluar)}</p>
+            <p className="lap-scard-trend trend-down">↓ Biaya Operasional</p>
+          </div>
         </div>
+        <div className="lap-scard lap-scard-green">
+          <div className="lap-scard-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div>
+            <p className="lap-scard-label">Laba Bersih</p>
+            <p className="lap-scard-val" style={{ color: laba < 0 ? "#dc2626" : "#16a34a" }}>{formatRp(laba)}</p>
+            <p className="lap-scard-trend" style={{ color: laba < 0 ? "#dc2626" : "#16a34a" }}>
+              {laba >= 0 ? "↑ Surplus Bisnis" : "↓ Defisit Bisnis"}
+            </p>
+          </div>
+        </div>
+        <div className="lap-scard lap-scard-purple">
+          <div className="lap-scard-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+          </div>
+          <div>
+            <p className="lap-scard-label">Saldo Akhir Kas</p>
+            <p className="lap-scard-val">{formatRp(saldoAkhir)}</p>
+            <p className="lap-scard-trend trend-up">✓ Dana Tersedia</p>
+          </div>
+        </div>
+      </div>
 
-        {activeTab === "ringkasan" && (
-          <div className="lap-content">
+      {/* Navigation Tabs */}
+      <div className="lap-tabs">
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            className={`lap-tab ${activeTab === t.id ? "lap-tab-active" : ""}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Main Content Area */}
+      {loading ? (
+        <div className="lap-card" style={{ textAlign: "center", padding: "40px" }}>
+          <p style={{ color: "#64748b" }}>Memuat data keuangan usaha...</p>
+        </div>
+      ) : (
+        <div className="lap-content">
+          {activeTab === "ringkasan" && (
             <div className="lap-grid-2">
-              <div className="lap-card">
-                <div className="lap-card-head">
-                  <h2 className="lap-card-title">Pemasukan vs Pengeluaran</h2>
-                  <p className="lap-card-desc">6 Bulan Terakhir</p>
+              
+              {/* KOREKSI: KOLOM KIRI (Grafik & Breakdown) */}
+              <div className="laporan-left-column">
+                <div className="lap-card">
+                  <div className="lap-card-head">
+                    <p className="lap-card-title">Grafik Arus Kas</p>
+                    <p className="lap-card-desc">Perbandingan bulanan pemasukan dan pengeluaran 6 bulan terakhir.</p>
+                  </div>
+                  <BarChart data={chartsData.barData} maxVal={chartsData.maxBarVal} />
                 </div>
-                <BarChart data={chartsData.barData} maxVal={chartsData.maxBarVal} />
-              </div>
 
-              <div className="lap-card">
-                <div className="lap-card-head">
-                  <h2 className="lap-card-title">Tren Laba Bersih</h2>
-                  <p className="lap-card-desc">Pergerakan Arus Kas</p>
+                <div className="lap-card">
+                  <div className="lap-card-head">
+                    <p className="lap-card-title">Tren Laba Bersih</p>
+                    <p className="lap-card-desc">Pergerakan profit bersih operasional Anda.</p>
+                  </div>
+                  <LineChart
+                    dataPoints={chartsData.lineData}
+                    labels={chartsData.labels}
+                    maxVal={chartsData.maxLineVal}
+                    minVal={chartsData.minLineVal}
+                  />
                 </div>
-                <LineChart
-                  dataPoints={chartsData.lineData}
-                  labels={chartsData.labels}
-                  maxVal={chartsData.maxLineVal}
-                  minVal={chartsData.minLineVal}
-                />
-              </div>
-            </div>
 
-            <div className="lap-card" style={{ marginTop: "20px" }}>
-              <div className="lap-card-head">
-                <h2 className="lap-card-title">Breakdown Pengeluaran per Kategori</h2>
-                <p className="lap-card-desc">Akumulasi Real-Time</p>
-              </div>
-              <div className="breakdown-grid">
-                {categoryBreakdown.length === 0 ? (
-                  <p style={{ color: "#94a3b8", padding: "10px 0" }}>Belum ada data pengeluaran.</p>
-                ) : (
-                  categoryBreakdown.map(k => (
-                    <div key={k.label} className="breakdown-row">
-                      <div className="breakdown-left">
-                        <span className="breakdown-dot" style={{ background: k.color }} />
-                        <span className="breakdown-label">{k.label}</span>
-                      </div>
-                      <div className="breakdown-bar-wrap">
-                        <div className="breakdown-track">
-                          <div className="breakdown-fill" style={{ width: `${k.pct}%`, background: k.color }} />
+                <div className="lap-card">
+                  <div className="lap-card-head">
+                    <p className="lap-card-title">Breakdown Pengeluaran</p>
+                    <p className="lap-card-desc">Distribusi alokasi pengeluaran berdasarkan kategori bisnis.</p>
+                  </div>
+                  <div className="breakdown-grid">
+                    {categoryBreakdown.length === 0 ? (
+                      <p style={{ fontSize: "13px", color: "#94a3b8" }}>Belum ada data pengeluaran.</p>
+                    ) : (
+                      categoryBreakdown.map(c => (
+                        <div key={c.label} className="breakdown-row">
+                          <div className="breakdown-left">
+                            <span className="breakdown-dot" style={{ background: c.color }} />
+                            <span className="breakdown-label">{c.label}</span>
+                          </div>
+                          <div className="breakdown-bar-wrap">
+                            <div className="breakdown-track">
+                              <div className="breakdown-fill" style={{ width: `${c.pct}%`, background: c.color }} />
+                            </div>
+                            <span className="breakdown-pct">{c.pct}%</span>
+                          </div>
+                          <span className="breakdown-val">{formatRp(c.val)}</span>
                         </div>
-                        <span className="breakdown-pct">{k.pct}%</span>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* KOREKSI: KOLOM KANAN (Rasio Keuangan & AI Insight Diupgrade) */}
+              <div className="laporan-right-column">
+                <div className="lap-card">
+                  <div className="lap-card-head">
+                    <p className="lap-card-title">Analisis Rasio Keuangan</p>
+                    <p className="lap-card-desc">Indikator kesehatan performa bisnis Anda.</p>
+                  </div>
+                  <div className="rasio-list">
+                    {[
+                      {
+                        label: "Margin Keuntungan Bersih",
+                        val: `${profitMargin}%`,
+                        status: profitMargin >= 20 ? "good" : profitMargin >= 0 ? "normal" : "bad",
+                        desc: profitMargin >= 20 ? "Profitabilitas sangat baik" : profitMargin >= 0 ? "Keuntungan tergolong rendah" : "Mengalami kerugian"
+                      },
+                      {
+                        label: "Rasio Pengeluaran",
+                        val: `${rasioPengeluaran}%`,
+                        status: rasioPengeluaran <= 70 ? "good" : "warn",
+                        desc: rasioPengeluaran <= 70 ? "Efisiensi biaya menjaga operasional" : "Biaya operasional membengkak"
+                      },
+                      {
+                        label: "Pertumbuhan Pendapatan",
+                        val: `${pertumbuhan}%`,
+                        status: "good",
+                        desc: "Mengalami tren kenaikan positif"
+                      },
+                      {
+                        label: "Likuiditas",
+                        val: `${likuiditas}x`,
+                        status: likuiditas >= 1 ? "good" : "warn",
+                        desc: likuiditas >= 1 ? "Arus kas cukup sehat" : "Perputaran uang sedang lambat"
+                      }
+                    ].map(r => (
+                      <div key={r.label} className="rasio-row">
+                        <div className="rasio-left">
+                          <span className="rasio-label">{r.label}</span>
+                          <span className="rasio-desc">{r.desc}</span>
+                        </div>
+                        <span className={`rasio-val rasio-${r.status}`}>{r.val}</span>
                       </div>
-                      <span className="breakdown-val">{formatRp(k.val)}</span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* KARTU AI BARU YANG DIPENUHI KE BAWAH */}
+                <div className="lap-card lap-card-insight upgraded-ai-card">
+                  <div className="ai-header-zone">
+                    <div className="insight-icon-wrap">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
                     </div>
-                  ))
-                )}
+                    <div className="ai-title-status">
+                      <p className="insight-card-title">Rekomendasi AI Pintar</p>
+                      <span className="ai-badge-score">Skor Finansial: <b>85/100</b></span>
+                    </div>
+                  </div>
+
+                  <div className="ai-content-zone">
+                    <p className="insight-card-text">{aiInsight}</p>
+                  </div>
+
+                  <div className="ai-action-zone">
+                    <p className="action-zone-title">Saran Tindakan Prioritas :</p>
+                    <ul className="ai-action-list">
+                      <li>
+                        <span className="action-dot-indicator efisiensi"></span>
+                        <p><b>Efisiensi Biaya:</b> Alokasi anggaran operasional non-esensial perlu dipantau agar rasio profit tetap stabil.</p>
+                      </li>
+                      <li>
+                        <span className="action-dot-indicator kas"></span>
+                        <p><b>Optimasi Kas:</b> Pertahankan sisa profit bulan ini sebagai bantalan dana cadangan darurat kas.</p>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="ai-footer-zone">
+                    <button className="insight-card-btn" onClick={() => alert("Konsultasi PDF AI sedang disiapkan!")}>
+                      Cetak Strategi Bisnis AI Lengkap →
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === "transaksi" && (
-          <div className="lap-content">
+          {activeTab === "transaksi" && (
             <div className="lap-card">
               <div className="trx-filter-bar">
                 <div className="trx-search-wrap">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   <input
+                    type="text"
+                    placeholder="Cari deskripsi transaksi..."
                     className="trx-search"
-                    placeholder="Cari transaksi..."
                     value={search}
-                    onChange={e => setSearch(e.target.value)}
+                    onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
                 <div className="trx-filters">
-                  <select className="trx-select" value={filterTipe} onChange={e => setFilterTipe(e.target.value)}>
+                  <select className="trx-select" value={filterTipe} onChange={(e) => setFilterTipe(e.target.value)}>
                     <option value="semua">Semua Tipe</option>
                     <option value="INCOME">Pemasukan</option>
                     <option value="EXPENSE">Pengeluaran</option>
                   </select>
-                  <select className="trx-select" value={filterKategori} onChange={e => setFilterKategori(e.target.value)}>
-                    {allKategori.map(kat => (
-                      <option key={kat} value={kat}>
-                        {kat === "semua" ? "Semua Kategori" : kat}
-                      </option>
+                  <select className="trx-select" value={filterKategori} onChange={(e) => setFilterKategori(e.target.value)}>
+                    {allKategori.map(cat => (
+                      <option key={cat} value={cat}>{cat === "semua" ? "Semua Kategori" : cat}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
               <div className="trx-table-wrap">
-                {loading ? (
-                  <div style={{ padding: "20px", textAlign: "center" }}>Memuat data...</div>
-                ) : (
-                  <table className="trx-table">
-                    <thead>
+                <table className="trx-table">
+                  <thead>
+                    <tr>
+                      <th>Tanggal</th>
+                      <th>Kategori</th>
+                      <th>Keterangan</th>
+                      <th style={{ textAlign: "right" }}>Jumlah</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedTransactions.length === 0 ? (
                       <tr>
-                        <th>Keterangan</th>
-                        <th>Kategori</th>
-                        <th>Tanggal</th>
-                        <th>Status</th>
-                        <th>Nominal</th>
+                        <td colSpan="4" style={{ textAlign: "center", padding: "20px", color: "#94a3b8" }}>Tidak ada transaksi ditemukan.</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filtered.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="trx-empty">Tidak ada transaksi yang cocok.</td>
+                    ) : (
+                      paginatedTransactions.map(t => (
+                        <tr key={t.id}>
+                          <td>{formatTanggal(t.date)}</td>
+                          <td><span className="trx-cat-badge">{t.category}</span></td>
+                          <td>{t.description || "-"}</td>
+                          <td style={{ textAlign: "right", fontWeight: "600", color: t.type === "INCOME" ? "#16a34a" : "#dc2626" }}>
+                            {t.type === "INCOME" ? "+" : "-"}{formatRp(t.amount)}
+                          </td>
                         </tr>
-                      ) : (
-                        paginatedTransactions.map(t => (
-                          <tr key={t.id}>
-                            <td className="trx-keterangan">
-                              <span className={`trx-type-dot ${t.type === "INCOME" ? "dot-masuk" : "dot-keluar"}`} />
-                              {t.description}
-                            </td>
-                            <td><span className="trx-kategori-tag">{t.category || "Lain-lain"}</span></td>
-                            <td className="trx-tanggal">{formatTanggal(t.date)}</td>
-                            <td><span className="trx-status status-sukses">Sukses</span></td>
-                            <td className={`trx-nominal ${t.type === "INCOME" ? "nominal-plus" : "nominal-minus"}`}>
-                              {t.type === "INCOME" ? "+" : "-"} {formatRp(t.amount)}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                )}
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
 
-              <div className="trx-footer" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px", marginTop:"14px" }}>
-                <span>
-                  Menampilkan {startNumber}–{endNumber} dari {filtered.length} transaksi (Total database: {transactions.length})
-                </span>
-                {totalPages > 1 && (
-                  <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-                    <button
-                      className="trx-select"
-                      style={{ padding:"4px 12px", height:"auto", cursor: currentPage===1 ? "not-allowed" : "pointer", opacity: currentPage===1 ? 0.5 : 1, background:"#fff" }}
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage(p => Math.max(p-1, 1))}
-                    >
-                      &larr; Prev
-                    </button>
-                    <span style={{ fontSize:"13px", color:"#64748b" }}>
-                      Hal <strong>{currentPage}</strong> dari {totalPages}
-                    </span>
-                    <button
-                      className="trx-select"
-                      style={{ padding:"4px 12px", height:"auto", cursor: currentPage===totalPages ? "not-allowed" : "pointer", opacity: currentPage===totalPages ? 0.5 : 1, background:"#fff" }}
-                      disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage(p => Math.min(p+1, totalPages))}
-                    >
-                      Next &rarr;
-                    </button>
-                  </div>
-                )}
+              <div className="trx-pagination" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+                <span style={{ fontSize: "12px", color: "#64748b" }}>Menampilkan {startNumber}-{endNumber} dari {filtered.length} transaksi</span>
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button className="trx-select" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}>Sebelumnya</button>
+                  <button className="trx-select" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}>Selanjutnya</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {activeTab === "laba-rugi" && (
-          <div className="lap-content">
-            <div className="lap-grid-2">
-              <div className="lap-card">
-                <h2 className="lap-card-title">Laporan Laba & Rugi</h2>
-                <p className="lap-card-desc" style={{ marginBottom: 16 }}>{period}</p>
-
-                <div className="lr-section">
-                  <div className="lr-section-title lr-green-title">PENDAPATAN</div>
-                  {incomeBreakdown.length > 0 ? (
-                    incomeBreakdown.map(r => (
-                      <div key={r.label} className="lr-row">
-                        <span className="lr-label">{r.label}</span>
-                        <span className="lr-val lr-plus">{formatRp(r.val)}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="lr-row">
-                      <span className="lr-label" style={{ color:"#94a3b8" }}>Belum ada data pendapatan</span>
-                    </div>
-                  )}
-                  <div className="lr-subtotal">
-                    <span>Total Pendapatan</span>
-                    <span className="lr-plus">{formatRp(totalMasuk)}</span>
-                  </div>
-                </div>
-
-                <div className="lr-section">
-                  <div className="lr-section-title lr-red-title">BEBAN USAHA</div>
-                  {expenseBreakdown.length > 0 ? (
-                    expenseBreakdown.map(r => (
-                      <div key={r.label} className="lr-row">
-                        <span className="lr-label">{r.label}</span>
-                        <span className="lr-val lr-minus">{formatRp(r.val)}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="lr-row">
-                      <span className="lr-label" style={{ color:"#94a3b8" }}>Belum ada data beban</span>
-                    </div>
-                  )}
-                  <div className="lr-subtotal">
-                    <span>Total Beban</span>
-                    <span className="lr-minus">{formatRp(totalKeluar)}</span>
-                  </div>
-                </div>
-
-                <div className="lr-total">
-                  <span className="lr-total-label">LABA BERSIH</span>
-                  <span className="lr-total-val">{formatRp(laba)}</span>
-                </div>
+          {activeTab === "laba-rugi" && (
+            <div className="lap-card">
+              <div className="lap-card-head" style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "12px", marginBottom: "16px" }}>
+                <p className="lap-card-title">Laporan Laba Rugi Terperinci</p>
+                <p className="lap-card-desc">Periode Berjalan: {period}</p>
               </div>
 
-              <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-                <div className="lap-card">
-                  <h2 className="lap-card-title">Rasio Keuangan</h2>
-                  <p className="lap-card-desc" style={{ marginBottom:14 }}>Indikator kesehatan usaha</p>
-                  {[
-                    { label:"Profit Margin",            val:`${profitMargin}%`,   status: profitMargin >= 10 ? "good" : "warn",    desc: profitMargin >= 10 ? "Margin profit terpantau sehat" : "Di bawah rata-rata target (10%)" },
-                    { label:"Rasio Pengeluaran",         val:`${rasioPengeluaran}%`, status: rasioPengeluaran > 80 ? "bad" : "good", desc: rasioPengeluaran > 80 ? "Terlalu tinggi, perlu efisiensi" : "Beban operasional terkendali" },
-                    { label:"Pertumbuhan Pendapatan",    val:`${pertumbuhan >= 0 ? "+" : ""}${pertumbuhan}%`, status: pertumbuhan >= 0 ? "good" : "bad", desc: pertumbuhan >= 0 ? "Lebih baik dari bulan lalu" : "Terjadi penurunan omset" },
-                    { label:"Likuiditas",                val:`${likuiditas}×`,      status: likuiditas >= 1 ? "good" : "warn",       desc: likuiditas >= 1 ? "Arus kas cukup sehat" : "Perputaran uang sedang lambat" },
-                  ].map(r => (
-                    <div key={r.label} className="rasio-row">
-                      <div className="rasio-left">
-                        <span className="rasio-label">{r.label}</span>
-                        <span className="rasio-desc">{r.desc}</span>
-                      </div>
-                      <span className={`rasio-val rasio-${r.status}`}>{r.val}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                <div>
+                  <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#16a34a", marginBottom: "8px", textTransform: "uppercase" }}>1. Pendapatan Usaha</h3>
+                  {incomeBreakdown.map(i => (
+                    <div key={i.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", padding: "6px 0", borderBottom: "0.5px dashed #f1f5f9" }}>
+                      <span style={{ color: "#475569" }}>Pendapatan {i.label}</span>
+                      <span style={{ fontWeight: "600", color: "#1e293b" }}>{formatRp(i.val)}</span>
                     </div>
                   ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "14px", color: "#1e293b", background: "#f8fafc", padding: "10px", borderRadius: "6px", marginTop: "8px" }}>
+                    <span>TOTAL PENDAPATAN</span>
+                    <span>{formatRp(totalMasuk)}</span>
+                  </div>
                 </div>
 
-                <div className="lap-card lap-card-insight">
-                  <div className="insight-icon-wrap">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
+                <div>
+                  <h3 style={{ fontSize: "14px", fontWeight: "700", color: "#dc2626", marginBottom: "8px", textTransform: "uppercase" }}>2. Beban Operasional</h3>
+                  {expenseBreakdown.map(e => (
+                    <div key={e.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "13.5px", padding: "6px 0", borderBottom: "0.5px dashed #f1f5f9" }}>
+                      <span style={{ color: "#475569" }}>Beban Biaya {e.label}</span>
+                      <span style={{ fontWeight: "600", color: "#1e293b" }}>{formatRp(e.val)}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "700", fontSize: "14px", color: "#1e293b", background: "#f8fafc", padding: "10px", borderRadius: "6px", marginTop: "8px" }}>
+                    <span>TOTAL BEBAN OPERASIONAL</span>
+                    <span>{formatRp(totalKeluar)}</span>
                   </div>
-                  <div>
-                    <p className="insight-card-title">Rekomendasi AI</p>
-                    <p className="insight-card-text">{aiInsight}</p>
-                    <button className="insight-card-btn">Lihat Detail AI →</button>
-                  </div>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "800", fontSize: "15px", color: laba >= 0 ? "#16a34a" : "#dc2626", background: laba >= 0 ? "#e8f5e9" : "#ffebee", padding: "12px", borderRadius: "8px", marginTop: "12px", border: laba >= 0 ? "1px solid #c8e6c9" : "1px solid #ffcdd2" }}>
+                  <span>{laba >= 0 ? "LABA BERSIH (SURPLUS)" : "RUGI BERSIH (DEFISIT)"}</span>
+                  <span>{formatRp(laba)}</span>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
