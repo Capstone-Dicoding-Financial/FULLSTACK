@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import "../css/Forecast.css";
 
-const EXPRESS_URL = "http://localhost:5000";
-const FASTAPI_URL = "http://localhost:8000";
+const EXPRESS_URL = import.meta.env.VITE_EXPRESS_URL || "https://fullstack-jdtoajx9g-capstonedicoding.vercel.app";
+const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL || "https://skys0o-umkm-cashflow-prediction.hf.space";
 
 function buildDailyCashflow(transactions, days = 7) {
   const map = {};
@@ -28,14 +28,17 @@ function calcCurrentBalance(transactions) {
   }, 0);
 }
 
-function ForecastChart({ actual, predicted, period }) {
+function ForecastChart({ actual = [], predicted = [], period }) {
+  // 💡 PERBAIKAN 2: Antisipasi jika array kosong agar Math.min/max tidak mengembalikan nilai Infinity (bisa bikin SVG crash)
   const allPts = [...actual, ...predicted.slice(1)];
-  const minY = Math.min(...allPts.map((p) => p[1])) - 8;
-  const maxY = Math.max(...allPts.map((p) => p[1])) + 8;
+  const valuesY = allPts.map((p) => p[1]);
+  
+  const minY = valuesY.length > 0 ? Math.min(...valuesY) - 8 : 0;
+  const maxY = valuesY.length > 0 ? Math.max(...valuesY) + 8 : 100;
   const W = 760, H = 160;
 
   const scaleX = (x) => (x / 720) * W;
-  const scaleY = (y) => H - ((y - minY) / (maxY - minY)) * H;
+  const scaleY = (y) => H - ((maxY - minY) === 0 ? H / 2 : ((y - minY) / (maxY - minY)) * H);
 
   const toPath = (pts) =>
     pts.map(([x, y], i) =>
@@ -43,18 +46,26 @@ function ForecastChart({ actual, predicted, period }) {
     ).join(" ");
 
   const toArea = (pts) => {
+    if (pts.length === 0) return "";
     const path = toPath(pts);
     return `${path} L${scaleX(pts[pts.length - 1][0]).toFixed(1)},${H} L${scaleX(pts[0][0]).toFixed(1)},${H} Z`;
   };
 
+  // Pastikan data predicted tersedia sebelum di-mapping
   const upper = predicted.map(([x, y]) => [x, Math.max(minY + 1, y - 6)]);
   const lower = predicted.map(([x, y]) => [x, Math.min(maxY - 1, y + 6)]);
-  const bandPath =
+  
+  const bandPath = predicted.length > 0 ? 
     `${toPath(upper)} L${scaleX(lower[lower.length - 1][0])},${scaleY(lower[lower.length - 1][1])} ` +
-    lower.slice().reverse().map(([x, y]) => `L${scaleX(x).toFixed(1)},${scaleY(y).toFixed(1)}`).join(" ") + " Z";
+    lower.slice().reverse().map(([x, y]) => `L${scaleX(x).toFixed(1)},${scaleY(y).toFixed(1)}`).join(" ") + " Z" 
+    : "";
 
   const gridY = [25, 50, 75].map((pct) => minY + ((maxY - minY) * pct) / 100);
   const dividerX = scaleX(360);
+
+  if (actual.length === 0 && predicted.length === 0) {
+    return <div style={{ textAlign: "center", padding: "20px", color: "#94a3b8" }}>Tidak ada data grafik</div>;
+  }
 
   return (
     <div className="forecast-chart-wrap">
@@ -84,21 +95,23 @@ function ForecastChart({ actual, predicted, period }) {
           Hari ini
         </text>
 
-        <path d={bandPath} fill="url(#fcBandGrad)" />
-        <path d={toArea(actual)} fill="url(#fcActGrad)" />
-        <path d={toArea(predicted)} fill="url(#fcPredGrad)" />
+        {bandPath && <path d={bandPath} fill="url(#fcBandGrad)" />}
+        {actual.length > 0 && <path d={toArea(actual)} fill="url(#fcActGrad)" />}
+        {predicted.length > 0 && <path d={toArea(predicted)} fill="url(#fcPredGrad)" />}
 
-        <path d={toPath(actual)} fill="none" stroke="#1d4ed8" strokeWidth="2.5"
-          strokeLinecap="round" strokeLinejoin="round" />
-        <path d={toPath(predicted)} fill="none" stroke="#0ea5e9" strokeWidth="2"
-          strokeDasharray="8 5" strokeLinecap="round" strokeLinejoin="round" />
+        {actual.length > 0 && <path d={toPath(actual)} fill="none" stroke="#1d4ed8" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round" />}
+        {predicted.length > 0 && <path d={toPath(predicted)} fill="none" stroke="#0ea5e9" strokeWidth="2"
+          strokeDasharray="8 5" strokeLinecap="round" strokeLinejoin="round" />}
 
         {actual.map(([x, y], i) => (
           <circle key={i} cx={scaleX(x).toFixed(1)} cy={scaleY(y).toFixed(1)}
             r="3.5" fill="#fff" stroke="#1d4ed8" strokeWidth="2" />
         ))}
-        <circle cx={scaleX(predicted[0][0]).toFixed(1)} cy={scaleY(predicted[0][1]).toFixed(1)}
-          r="5.5" fill="#fff" stroke="#0ea5e9" strokeWidth="2.5" />
+        {predicted.length > 0 && (
+          <circle cx={scaleX(predicted[0][0]).toFixed(1)} cy={scaleY(predicted[0][1]).toFixed(1)}
+            r="5.5" fill="#fff" stroke="#0ea5e9" strokeWidth="2.5" />
+        )}
       </svg>
 
       <div className="fc-xaxis">
@@ -148,7 +161,8 @@ function SkenarioCard({ type, val, growth, active, onClick }) {
       style={active ? { background: m.bg, borderColor: m.border } : {}}
       onClick={onClick}
     >
-      <div className="skenario-icon" style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
+      {/* 💡 PERBAIKAN 3: Disesuaikan dengan CSS flex milik .skenario-card agar sebaris rapi */}
+      <div className="skenario-icon" style={{ display: "flex", alignItems: "center" }}>
         {m.icon}
       </div>
       <div className="skenario-label">{m.label}</div>
@@ -194,7 +208,7 @@ function InsightCard({ icon, type, title, text, action }) {
       <div className="ins-body">
         <p className="ins-title">{title}</p>
         <p className="ins-text">{text}</p>
-        {action && <button className="ins-action">{action} →</button>}
+        {action && <button className="ins-action" type="button">{action} →</button>}
       </div>
     </div>
   );
@@ -245,7 +259,7 @@ function ErrorState({ message, onRetry }) {
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
           <h3 style={{ marginBottom: 8, color: "#1e293b" }}>Gagal Memuat Forecast</h3>
           <p style={{ color: "#64748b", marginBottom: 16 }}>{message}</p>
-          <button className="btn-primary" onClick={onRetry}>Coba Lagi</button>
+          <button className="fc-dl-btn" style={{ margin: "0 auto", background: "#1d4ed8", color: "#fff" }} onClick={onRetry}>Coba Lagi</button>
         </div>
       </div>
     </div>
@@ -349,10 +363,10 @@ export default function ForecastArusKas() {
 
       if (!txRes.ok) throw new Error("Gagal mengambil data transaksi dari server.");
 
-      const txBody       = await txRes.json();
+      const txBody = await txRes.json();
       
-      // Sinkronisasi properti dari backend baru (txBody.data)
-      const transactions = txBody.data || [];
+      // 💡 PERBAIKAN 4: Penanganan struktur data yang fleksibel (bisa .data atau .transactions)
+      const transactions = txBody.data || txBody.transactions || [];
 
       if (!Array.isArray(transactions) || transactions.length === 0) {
         throw new Error("Belum ada data transaksi. Tambahkan transaksi terlebih dahulu untuk melihat forecast.");
@@ -462,30 +476,30 @@ export default function ForecastArusKas() {
         <KpiCard
           icon={<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M21 12h-4v2h4"/></svg>}
           label="Prediksi Saldo Akhir"
-          value={d.saldoAkhir}
-          sub={`${d.saldoChange >= 0 ? "↑" : "↓"} ${d.saldoChange >= 0 ? "+" : ""}${d.saldoChange}% dari saat ini`}
-          subColor={d.saldoChange >= 0 ? "#16a34a" : "#dc2626"}
+          value={d?.saldoAkhir || "Rp 0"}
+          sub={`${(d?.saldoChange || 0) >= 0 ? "↑" : "↓"} ${(d?.saldoChange || 0) >= 0 ? "+" : ""}${d?.saldoChange || 0}% dari saat ini`}
+          subColor={(d?.saldoChange || 0) >= 0 ? "#16a34a" : "#dc2626"}
           highlight
         />
         <KpiCard
           icon={<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>}
           label="Prediksi Pemasukan"
-          value={d.pemasukan}
-          sub={`${d.pemasukanChange >= 0 ? "↑" : "↓"} ${d.pemasukanChange >= 0 ? "+" : ""}${d.pemasukanChange}% vs tren lalu`}
-          subColor={d.pemasukanChange >= 0 ? "#16a34a" : "#dc2626"}
+          value={d?.pemasukan || "Rp 0"}
+          sub={`${(d?.pemasukanChange || 0) >= 0 ? "↑" : "↓"} ${(d?.pemasukanChange || 0) >= 0 ? "+" : ""}${d?.pemasukanChange || 0}% vs tren lalu`}
+          subColor={(d?.pemasukanChange || 0) >= 0 ? "#16a34a" : "#dc2626"}
         />
         <KpiCard
           icon={<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>}
           label="Prediksi Pengeluaran"
-          value={d.pengeluaran}
-          sub={`${d.pengeluaranChange >= 0 ? "↑" : "↓"} ${d.pengeluaranChange >= 0 ? "+" : ""}${d.pengeluaranChange}% vs tren lalu`}
-          subColor={d.pengeluaranChange <= 0 ? "#16a34a" : "#dc2626"}
+          value={d?.pengeluaran || "Rp 0"}
+          sub={`${(d?.pengeluaranChange || 0) >= 0 ? "↑" : "↓"} ${(d?.pengeluaranChange || 0) >= 0 ? "+" : ""}${d?.pengeluaranChange || 0}% vs tren lalu`}
+          subColor={(d?.pengeluaranChange || 0) <= 0 ? "#16a34a" : "#dc2626"}
         />
         <KpiCard
           icon={<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>}
           label="Akurasi Model"
-          value={`${d.accuracy}%`}
-          sub={`MAPE ${d.mape}`}
+          value={`${d?.accuracy || 0}%`}
+          sub={`MAPE ${d?.mape || 0}`}
           subColor="#7c3aed"
         />
       </div>
@@ -502,7 +516,7 @@ export default function ForecastArusKas() {
             <span className="fcleg-item"><span className="fcleg-band" />Confidence Band</span>
           </div>
         </div>
-        <ForecastChart actual={d.chartActual} predicted={d.chartPred} period={period} />
+        <ForecastChart actual={d?.chartActual} predicted={d?.chartPred} period={period} />
       </div>
 
       <div className="fc-row fc-row-mid">
@@ -514,8 +528,8 @@ export default function ForecastArusKas() {
               <SkenarioCard
                 key={s}
                 type={s}
-                val={d.skenario[s].val}
-                growth={d.skenario[s].growth}
+                val={d?.skenario?.[s]?.val || "Rp 0"}
+                growth={d?.skenario?.[s]?.growth || "0%"}
                 active={activeSkenario === s}
                 onClick={() => setActiveSkenario(s)}
               />
@@ -539,7 +553,7 @@ export default function ForecastArusKas() {
             <span>CI (±)</span>
           </div>
           <div className="tl-list">
-            {d.timeline.map((t, i) => (
+            {(d?.timeline || []).map((t, i) => (
               <TimelineRow key={i} {...t} index={i} />
             ))}
           </div>
@@ -569,16 +583,16 @@ export default function ForecastArusKas() {
         <div className="insights-grid">
           <InsightCard
             icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>}
-            type={d.saldoChange >= 0 ? "pos" : "warn"}
-            title={d.saldoChange >= 0 ? "Tren Positif" : "Perhatian: Tren Menurun"}
-            text={`Kas diperkirakan ${d.saldoChange >= 0 ? "meningkat" : "menurun"} ${Math.abs(d.saldoChange)}% dalam ${period} hari ke depan berdasarkan pola historis transaksi kamu.`}
+            type={(d?.saldoChange || 0) >= 0 ? "pos" : "warn"}
+            title={(d?.saldoChange || 0) >= 0 ? "Tren Positif" : "Perhatian: Tren Menurun"}
+            text={`Kas diperkirakan ${(d?.saldoChange || 0) >= 0 ? "meningkat" : "menurun"} ${Math.abs(d?.saldoChange || 0)}% dalam ${period} hari ke depan berdasarkan pola historis transaksi kamu.`}
             action="Lihat detail tren"
           />
           <InsightCard
             icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
             type="warn"
             title="Akurasi Model"
-            text={`Model GRU memiliki akurasi ${d.accuracy}% dengan MAPE ${d.mape}. ${parseFloat(d.mape) > 15 ? "Tambahkan lebih banyak data transaksi untuk meningkatkan akurasi prediksi." : "Akurasi model sudah dalam target yang baik."}`}
+            text={`Model GRU memiliki akurasi ${d?.accuracy || 0}% dengan MAPE ${d?.mape || 0}. ${parseFloat(d?.mape || 0) > 15 ? "Tambahkan lebih banyak data transaksi untuk meningkatkan akurasi prediksi." : "Akurasi model sudah dalam target yang baik."}`}
             action="Kelola pengeluaran"
           />
           <InsightCard
@@ -612,8 +626,8 @@ export default function ForecastArusKas() {
 
         <div className="eval-body">
           <div className="eval-metrics">
-            <MetricPill label="Accuracy"  value={`${d.accuracy}%`} desc="Tingkat akurasi keseluruhan"  color="#1d4ed8" />
-            <MetricPill label="MAPE"      value={d.mape}           desc="Mean Absolute Percentage Error" color="#7c3aed" />
+            <MetricPill label="Accuracy"  value={`${d?.accuracy || 0}%`} desc="Tingkat akurasi keseluruhan"  color="#1d4ed8" />
+            <MetricPill label="MAPE"      value={d?.mape || "0"}       desc="Mean Absolute Percentage Error" color="#7c3aed" />
             <MetricPill label="Horizon"   value={`${period}h`}     desc="Jangkauan prediksi aktif"     color="#059669" />
             <MetricPill label="Input"     value="7 hari"           desc="Window historis model"        color="#0891b2" />
           </div>
