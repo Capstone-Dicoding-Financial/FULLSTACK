@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import "../css/Laporan.css";
 
-// 1. Definisikan Base URL API secara dinamis (otomatis fallback ke Vercel jika .env lokal kosong)
-const apiBaseUrl = import.meta.env.VITE_API_URL || "https://fullstack-backend-capstone.vercel.app.";
+// Base URL API disesuaikan tanpa tanda titik di ujungnya
+const apiBaseUrl = import.meta.env.VITE_API_URL || "https://fullstack-backend-capstone.vercel.app";
 
 function fmtAxis(val) {
   const abs = Math.abs(val);
@@ -226,13 +226,13 @@ export default function Laporan() {
     };
   };
 
-  // FIX: Ditambahkan /api sebelum rute transaksi
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-          const response = await fetch("https://fullstack-backend-capstone.vercel.app/transactions", {
-        headers: getAuthHeaders(),
+        // FIX: Menambahkan /api/ sebelum rute transaksi
+        const response = await fetch("https://fullstack-backend-capstone.vercel.app/api/transactions", {
+          headers: getAuthHeaders(),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Gagal mengambil data");
@@ -247,13 +247,13 @@ export default function Laporan() {
     fetchTransactions();
   }, []);
 
-  // FIX: Ditambahkan /api sebelum rute insights
   useEffect(() => {
     const fetchAIInsight = async () => {
       try {
-        const response = await fetch("https://fullstack-backend-capstone.vercel.app/transactions/insights", {
-      headers: getAuthHeaders(),
-      });
+        // FIX: Menambahkan /api/ sebelum rute insights
+        const response = await fetch("https://fullstack-backend-capstone.vercel.app/api/transactions/insights", {
+          headers: getAuthHeaders(),
+        });
         const data = await response.json();
         setAiInsight(data.insight || "Gagal memproses rekomendasi.");
       } catch (err) {
@@ -339,7 +339,6 @@ export default function Laporan() {
   const likuiditas        = totalKeluar > 0 ? (totalMasuk / totalKeluar).toFixed(1) : 0;
   const pertumbuhan       = 8.2;
   
-  // Ditambahkan fallback "Lain-lain" untuk antisipasi data kategori bernilai null
   const allKategori = ["semua", ...new Set(transactions.map(t => t.category || "Lain-lain"))];
   
   const filtered = transactions.filter(t => {
@@ -403,7 +402,6 @@ export default function Laporan() {
 
   return (
     <div className="laporan-page">
-
       <div className="lap-topbar" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <h1 className="lap-title">Laporan Keuangan</h1>
@@ -437,8 +435,8 @@ export default function Laporan() {
           {isExporting ? "Memproses PDF..." : "Export PDF"}
         </button>
       </div>
+      
       <div id="printable-report-area">
-        
         <div className="lap-summary">
           <div className="lap-scard lap-scard-blue">
             <div className="lap-scard-icon">
