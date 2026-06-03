@@ -164,9 +164,9 @@ export default function Dashboard() {
 
         // Ambil data finansial dasar dan data AI secara paralel
         const [resSummary, resTrx, resAI] = await Promise.all([
-          fetch("http://localhost:5000/api/transactions/summary", { headers }),
-          fetch("http://localhost:5000/api/transactions", { headers }),
-          fetch("http://localhost:5000/api/predict/cashflow", { headers })
+          fetch("https://fullstack-backend-capstone.vercel.app/api/transactions/summary", { headers }),
+          fetch("https://fullstack-backend-capstone.vercel.app/api/transactions", { headers }),
+          fetch("https://fullstack-backend-capstone.vercel.app/api/predict/cashflow", { headers })
         ]);
 
         if (!resSummary.ok || !resTrx.ok) {
