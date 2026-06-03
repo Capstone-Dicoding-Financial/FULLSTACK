@@ -4,41 +4,44 @@ import authRoutes from './routes/authroutes.js';
 import transactionRoutes from './routes/transactionroutes.js';
 import profileRoutes from './routes/profileroutes.js';
 import predictRoutes from './routes/predictroutes.js';
+import { verifyToken } from './middlewares/authmiddlewares.js';
 import { swaggerSpec } from './utils/swagger.js';
 import swaggerUi from 'swagger-ui-express';
 
 const app = express();
+app.use(express.json());
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin || '';
-  const allowed =
-    origin.endsWith('.vercel.app') ||
-    origin.startsWith('http://localhost') ||
-    origin.startsWith('http://127.0.0.1');
+const allowedOrigins = [
+  'https://fullstack-backend-capstone.vercel.app', 
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
 
-  if (allowed) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    const isLocalhost = origin.startsWith('http://localhost');
+    const isVercel = origin.endsWith('.vercel.app');
 
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
+    if (isLocalhost || isVercel || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS policy'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ limit: '2mb', extended: true }));
+
 app.get('/', (req, res) => {
   res.json({
-    status: 'success',
-    message: 'Server Backend Capstone Financial API Berhasil Berjalan di Vercel!',
+    status: "success",
+    message: "Server Backend Capstone Financial API Berhasil Berjalan di Vercel!"
   });
 });
 
@@ -48,10 +51,11 @@ app.use('/api/profile', profileRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/predict', predictRoutes);
 
-// ─── Start (local only) ───────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
 }
 
 export default app;
