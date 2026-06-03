@@ -19,7 +19,10 @@ app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+    const isLocalhost = origin.startsWith('http://localhost');
+    const isVercel = origin.endsWith('.vercel.app');
+
+    if (isLocalhost || isVercel || process.env.NODE_ENV !== 'production') {
       callback(null, true);
     } else {
       callback(new Error('Blocked by CORS policy'));
