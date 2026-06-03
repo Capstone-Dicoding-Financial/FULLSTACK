@@ -1,11 +1,10 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { validate } from '../middlewares/validate.js';
-import { getTransactionSummary, addTransaction, getTransactions, deleteTransaction } from '../controller/transactioncontroller.js';
 import { verifyToken } from '../middlewares/authmiddlewares.js';
+import { getTransactionSummary, addTransaction, getTransactions, deleteTransaction, getInsights } from '../controller/transactioncontroller.js';
 
 const router = express.Router();
-
 router.use(verifyToken);
 
 const transactionValidationRules = [
@@ -57,6 +56,33 @@ const transactionValidationRules = [
  *         description: Kesalahan server
  */
 router.get('/summary', getTransactionSummary);
+
+/**
+ * @openapi
+ * /api/transactions/insights:
+ *   get:
+ *     summary: Mendapatkan rekomendasi dan analisis keuangan (AI Insights)
+ *     tags: [Transactions]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Insight berhasil diambil
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 insight:
+ *                   type: string
+ *       401:
+ *         description: Token tidak valid
+ *       500:
+ *         description: Kesalahan server
+ */
+router.get('/insights', getInsights);
 
 /**
  * @openapi
@@ -125,7 +151,7 @@ router.get('/', getTransactions);
  *       401:
  *         description: Token tidak valid
  */
-router.post('/', addTransaction, transactionValidationRules, validate);
+router.post('/', transactionValidationRules, validate, addTransaction);
 
 /**
  * @openapi

@@ -3,8 +3,6 @@ import { verifyToken } from '../middlewares/authmiddlewares.js'; // sesuaikan pa
 import { getCashflowPrediction } from '../controller/predictcontroller.js';
 
 const router = express.Router();
-router.get('/insights', verifyToken, getInsights);
-router.get('/', verifyToken, getTransactions);
 router.get('/cashflow', verifyToken, getCashflowPrediction);
 router.post('/cashflow', verifyToken, getCashflowPrediction);
 
