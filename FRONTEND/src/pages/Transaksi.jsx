@@ -167,6 +167,33 @@ export default function Transaksi() {
     } catch (err) { alert(err.message); }
   };
 
+  const handleExportCSV = () => {
+    if (transactions.length === 0) return alert("Tidak ada data transaksi untuk diekspor.");
+
+    const headers = ["Tanggal", "Jenis", "Kategori", "Keterangan", "Nominal (Rp)"];
+    const rows = transactions.map((t) => [
+      formatTanggal(t.date),
+      t.type === "INCOME" ? "Pemasukan" : "Pengeluaran",
+      t.category || "-",
+      (t.description || "-").replace(/,/g, " "),
+      t.amount,
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href     = url;
+    link.download = `Transaksi_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const stats = useMemo(() => {
     let income = 0, expense = 0;
     transactions.forEach((t) => {
@@ -208,6 +235,14 @@ export default function Transaksi() {
           <p className="transaksi-header__sub">Kelola seluruh riwayat pemasukan dan pengeluaran toko Anda di sini.</p>
         </div>
         <div className="transaksi-header__actions">
+          <button className="btn-outline btn-csv" onClick={handleExportCSV}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export CSV
+          </button>
           <button className="btn-primary-custom" onClick={() => setShowModal(true)}>+ Tambah Transaksi</button>
         </div>
       </div>
