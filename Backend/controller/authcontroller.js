@@ -87,7 +87,7 @@ export const forgotPassword = async (req, res) => {
     );
 
     // Link mengarah ke halaman ResetPassword.jsx di frontend (Port 5173)
-    const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
+    const resetLink = `https://fullstack-backend-capstone.vercel.app/reset-password?token=${resetToken}`;
     const mailOptions = {
       from: '"DanaUMKM Support" <noreply@danaumkm.com>',
       to: email,
