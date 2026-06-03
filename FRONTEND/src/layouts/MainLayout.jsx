@@ -90,12 +90,20 @@ export default function MainLayout() {
   });
 
   // Fetch data dari endpoint yang sama dengan Profile.jsx
-  const fetchSidebarProfile = async () => {
-    const userId = localStorage.getItem("userId");
+    const fetchSidebarProfile = async () => {
+      const userId = localStorage.getItem("userId");
+      const token = localStorage.getItem("token"); // Ambil token untuk autentikasi
     if (!userId) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/profile/${userId}`);
+      // 1. Ubah ke URL Vercel Backend & 2. Tambahkan headers token
+      const response = await fetch(`https://fullstack-backend-capstone.vercel.app/api/profile/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
         
