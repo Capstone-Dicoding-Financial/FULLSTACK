@@ -141,3 +141,17 @@ export const deleteTransaction = async (req, res) => {
     return res.status(400).json({ error: "Gagal menghapus transaksi" });
   }
 };
+
+export const getInsights = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?.userId;
+
+    return res.status(200).json({ 
+      success: true, 
+      insight: "Analisis sistem: Arus kas Anda stabil. Pertahankan efisiensi pengeluaran di kategori operasional." 
+    });
+  } catch (error) {
+    console.error("Error di getInsights:", error);
+    return res.status(500).json({ error: "Gagal memproses insight AI" });
+  }
+};
