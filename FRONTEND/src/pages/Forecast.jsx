@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import "../css/Forecast.css";
 
+// 💡 PERBAIKAN URL: Mengarah langsung ke Hugging Face Space FastAPI kamu
 const EXPRESS_URL = import.meta.env.VITE_EXPRESS_URL || "https://fullstack-jdtoajx9g-capstonedicoding.vercel.app";
 const FASTAPI_URL = import.meta.env.VITE_FASTAPI_URL || "https://skys0o-umkm-cashflow-prediction.hf.space";
 
@@ -29,7 +30,6 @@ function calcCurrentBalance(transactions) {
 }
 
 function ForecastChart({ actual = [], predicted = [], period }) {
-  // 💡 PERBAIKAN 2: Antisipasi jika array kosong agar Math.min/max tidak mengembalikan nilai Infinity (bisa bikin SVG crash)
   const allPts = [...actual, ...predicted.slice(1)];
   const valuesY = allPts.map((p) => p[1]);
   
@@ -51,7 +51,6 @@ function ForecastChart({ actual = [], predicted = [], period }) {
     return `${path} L${scaleX(pts[pts.length - 1][0]).toFixed(1)},${H} L${scaleX(pts[0][0]).toFixed(1)},${H} Z`;
   };
 
-  // Pastikan data predicted tersedia sebelum di-mapping
   const upper = predicted.map(([x, y]) => [x, Math.max(minY + 1, y - 6)]);
   const lower = predicted.map(([x, y]) => [x, Math.min(maxY - 1, y + 6)]);
   
@@ -161,7 +160,6 @@ function SkenarioCard({ type, val, growth, active, onClick }) {
       style={active ? { background: m.bg, borderColor: m.border } : {}}
       onClick={onClick}
     >
-      {/* 💡 PERBAIKAN 3: Disesuaikan dengan CSS flex milik .skenario-card agar sebaris rapi */}
       <div className="skenario-icon" style={{ display: "flex", alignItems: "center" }}>
         {m.icon}
       </div>
@@ -364,8 +362,6 @@ export default function ForecastArusKas() {
       if (!txRes.ok) throw new Error("Gagal mengambil data transaksi dari server.");
 
       const txBody = await txRes.json();
-      
-      // 💡 PERBAIKAN 4: Penanganan struktur data yang fleksibel (bisa .data atau .transactions)
       const transactions = txBody.data || txBody.transactions || [];
 
       if (!Array.isArray(transactions) || transactions.length === 0) {
