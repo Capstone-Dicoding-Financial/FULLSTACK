@@ -9,7 +9,9 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "methods": ["OPTIONS"],
+      "methods": [
+        "OPTIONS"
+      ],
       "headers": {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
