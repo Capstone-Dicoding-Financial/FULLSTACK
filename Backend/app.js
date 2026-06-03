@@ -4,6 +4,7 @@ import authRoutes from './routes/authroutes.js';
 import transactionRoutes from './routes/transactionroutes.js';
 import profileRoutes from './routes/profileroutes.js';
 import predictRoutes from './routes/predictroutes.js';
+import { verifyToken } from './middlewares/authmiddlewares.js';
 import { swaggerSpec } from './utils/swagger.js';
 import swaggerUi from 'swagger-ui-express';
 
@@ -48,7 +49,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use('/api/predict', predictRoutes);
+app.use('/api/predict', verifyToken, predictRoutes);
 
 const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
