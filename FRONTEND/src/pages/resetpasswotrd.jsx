@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import "<div styleName={} />
-<css />
-<Resetp></Resetp>assword.css"; 
+import "../css/Resetpassword.css"; 
 
 const LockIcon = () => (
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
@@ -10,7 +8,6 @@ const LockIcon = () => (
     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
   </svg>
 );
-
 export default function ResetPassword() {
   const navigate = useNavigate();
 
