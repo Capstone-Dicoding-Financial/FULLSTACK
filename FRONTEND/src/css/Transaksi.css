@@ -595,3 +595,81 @@
 }
 .btn-csv:hover { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
 .btn-csv svg { stroke: currentColor; }
+/* ── Stat Cards gaya Laporan ──────────────────────────────── */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.trx-scard {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 0.5px solid #f1f5f9;
+}
+.trx-scard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.09);
+}
+
+.trx-scard-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.trx-scard-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* warna per kartu */
+.trx-scard-blue .trx-scard-icon  { background: #dbeafe; color: #2563eb; }
+.trx-scard-red  .trx-scard-icon  { background: #fee2e2; color: #dc2626; }
+.trx-scard-green .trx-scard-icon { background: #dcfce7; color: #16a34a; }
+
+.trx-scard-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: 0 0 4px;
+}
+
+.trx-scard-val {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: -0.4px;
+  margin: 0 0 4px;
+}
+
+.trx-scard-trend {
+  font-size: 11.5px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.trx-scard-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.trend-up   { color: #16a34a; }
+.trend-down { color: #dc2626; }
+
+@media (max-width: 768px) {
+  .stat-row { grid-template-columns: 1fr; }
+}

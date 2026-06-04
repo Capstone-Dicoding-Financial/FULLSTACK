@@ -14,14 +14,20 @@ const formatTanggal = (str) => {
 const toNumber  = (str) => parseInt(String(str).replace(/\D/g, ""), 10) || 0;
 const toDisplay = (str) => { const n = toNumber(str); return n ? n.toLocaleString("id-ID") : ""; };
 
-/* ── StatCard ──────────────────────────────────────────────── */
-function StatCard({ label, value, sub, valueClass }) {
+/* ── StatCard (gaya Laporan) ───────────────────────────────── */
+function StatCard({ label, value, sub, trend, trendUp, colorClass, icon }) {
   return (
-    <div className="stat-card">
-      <div className="stat-card__info">
-        <p className="stat-card__label">{label}</p>
-        <p className={`stat-card__value ${valueClass ?? ""}`}>{value}</p>
-        {sub && <p className="stat-card__sub">{sub}</p>}
+    <div className={`trx-scard ${colorClass}`}>
+      <div className="trx-scard-icon">{icon}</div>
+      <div>
+        <p className="trx-scard-label">{label}</p>
+        <p className="trx-scard-val">{value}</p>
+        {trend && (
+          <p className={`trx-scard-trend ${trendUp ? "trend-up" : "trend-down"}`}>
+            {trendUp ? "↑" : "↓"} {trend}
+          </p>
+        )}
+        {sub && !trend && <p className="trx-scard-sub">{sub}</p>}
       </div>
     </div>
   );
@@ -252,20 +258,39 @@ export default function Transaksi() {
         <StatCard
           label="Total Pemasukan"
           value={formatRp(stats.totalIncome)}
-          sub={`${transactions.filter((t) => t.type === "INCOME").length} item masuk`}
-          valueClass="text-green"
+          trend={`${transactions.filter((t) => t.type === "INCOME").length} transaksi masuk`}
+          trendUp={true}
+          colorClass="trx-scard-blue"
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          }
         />
         <StatCard
           label="Total Pengeluaran"
           value={formatRp(stats.totalExpense)}
-          sub={`${transactions.filter((t) => t.type === "EXPENSE").length} pengeluaran`}
-          valueClass="text-red"
+          trend={`${transactions.filter((t) => t.type === "EXPENSE").length} pengeluaran`}
+          trendUp={false}
+          colorClass="trx-scard-red"
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          }
         />
         <StatCard
           label="Sisa Saldo Kas"
           value={formatRp(stats.balance)}
-          sub="Sisa dana bersih"
-          valueClass={stats.balance >= 0 ? "text-blue" : "text-red"}
+          trend={stats.balance >= 0 ? "Dana Tersedia" : "Defisit Kas"}
+          trendUp={stats.balance >= 0}
+          colorClass={stats.balance >= 0 ? "trx-scard-green" : "trx-scard-red"}
+          icon={
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2"/>
+              <line x1="12" y1="4" x2="12" y2="20"/>
+            </svg>
+          }
         />
       </div>
 

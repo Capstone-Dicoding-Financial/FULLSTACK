@@ -87,13 +87,13 @@ export default function ForgotPassword() {
 
           {error && (
             <div className="register-error-banner" style={{ background: "#fee2e2", color: "#ef4444", padding: "10px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", marginBottom: "16px", border: "1px solid #fca5a5" }}>
-              ⚠️ {error}
+              {error}
             </div>
           )}
 
           {message && (
             <div className="register-success-banner" style={{ background: "#dcfce7", color: "#16a34a", padding: "10px 14px", borderRadius: "8px", fontSize: "13px", fontWeight: "600", marginBottom: "16px", border: "1px solid #bbf7d0" }}>
-              📩 {message}
+              {message}
             </div>
           )}
 
