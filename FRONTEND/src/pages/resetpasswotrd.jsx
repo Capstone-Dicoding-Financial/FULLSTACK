@@ -85,9 +85,6 @@ export default function ResetPassword() {
         <div className="rp-left-bg"></div>
         
         <div className="rp-left-content">
-          <div className="rp-brand">
-            <div className="rp-brand-name">DanaUMKM</div>
-          </div>
           <h2 className="rp-left-title">
             Perbarui Kata Sandi
             <br />
