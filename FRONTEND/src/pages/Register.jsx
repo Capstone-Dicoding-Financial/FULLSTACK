@@ -84,37 +84,38 @@ export default function Register() {
   };
 
   return (
-    <div className="register-page">
-      <div className="register-left">
-        <div className="overlay"></div>
+    <div className="reg-page">
+      {/* SISI PANEL KIRI */}
+      <div className="reg-left">
+        <div className="reg-left-bg"></div>
 
-        <div className="register-left-content">
-          <h1>DanaUMKM</h1>
+        <div className="reg-brand">
+          <div className="reg-brand-name">DanaUMKM</div>
+        </div>
 
-          <h2>
+        <div className="reg-left-content">
+          <h2 className="reg-left-title">
             Bangun Bisnis Lebih
             <br />
             Modern Bersama AI
           </h2>
 
-          <p>
-            Kelola transaksi, prediksi arus kas,
-            dan dapatkan insight bisnis dalam
-            satu platform modern.
+          <p className="reg-left-desc">
+            Kelola transaksi, prediksi arus kas, dan dapatkan insight bisnis dalam satu platform modern.
           </p>
 
-          <div className="register-stats">
-            <div>
+          <div className="reg-stats">
+            <div className="reg-stat">
               <strong>2K+</strong>
               <span>UMKM Aktif</span>
             </div>
 
-            <div>
+            <div className="reg-stat">
               <strong>95%</strong>
               <span>Prediksi Akurat</span>
             </div>
 
-            <div>
+            <div className="reg-stat">
               <strong>OJK</strong>
               <span>Terverifikasi</span>
             </div>
@@ -122,37 +123,20 @@ export default function Register() {
         </div>
       </div>
 
-      <div className="register-right">
-        <div className="register-card">
-          <h2 className="register-title">
-            Buat Akun Baru
-          </h2>
+      {/* SISI PANEL KANAN */}
+      <div className="reg-right">
+        <div className="reg-form-wrap">
+          <h2 className="reg-title">Buat Akun Baru</h2>
+          <p className="reg-subtitle">Daftar untuk mulai menggunakan DanaUMKM</p>
 
-          <p className="register-subtitle">
-            Daftar untuk mulai menggunakan DanaUMKM
-          </p>
+          {/* Banner Error - Sekarang 100% menggunakan class CSS */}
+          {error && <div className="reg-error-banner">{error}</div>}
 
-          {error && (
-            <div className="register-error-banner" 
-            style={{
-              background: "#fee2e2",
-              color: "#ef4444",
-              padding: "10px 14px",
-              borderRadius: "8px",
-              fontSize: "13px",
-              fontWeight: "600",
-              marginBottom: "16px",
-              border: "1px solid #fca5a5"
-            }}>
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="register-form">
-
-            <div className="form-group">
+          <form onSubmit={handleSubmit} className="reg-form">
+            <div className="reg-fgroup">
               <label>Nama Lengkap</label>
-              <div className="input-group">
-                <span className="input-icon">
+              <div className="reg-input-wrap">
+                <span className="reg-input-icon">
                   <UserIcon />
                 </span>
                 <input
@@ -167,10 +151,10 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="reg-fgroup">
               <label>Email</label>
-              <div className="input-group">
-                <span className="input-icon">
+              <div className="reg-input-wrap">
+                <span className="reg-input-icon">
                   <MailIcon />
                 </span>
                 <input
@@ -185,10 +169,10 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="reg-fgroup">
               <label>Password</label>
-              <div className="input-group">
-                <span className="input-icon">
+              <div className="reg-input-wrap">
+                <span className="reg-input-icon">
                   <LockIcon />
                 </span>
                 <input
@@ -203,10 +187,10 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="reg-fgroup">
               <label>Konfirmasi Password</label>
-              <div className="input-group">
-                <span className="input-icon">
+              <div className="reg-input-wrap">
+                <span className="reg-input-icon">
                   <LockIcon />
                 </span>
                 <input
@@ -221,22 +205,15 @@ export default function Register() {
               </div>
             </div>
 
-            <button 
-              type="submit" 
-              className="register-btn" 
-              disabled={loading}
-              style={{ opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}
-            >
+            {/* Button Submit - Sekarang status disabled diatur otomatis oleh CSS */}
+            <button type="submit" className="reg-submit-btn" disabled={loading}>
               {loading ? "Memproses Pendaftaran..." : "Daftar Sekarang"}
             </button>
-
           </form>
 
-          <p className="register-footer">
-            Sudah punya akun?
-            <Link to="/login"> Masuk</Link>
+          <p className="reg-footer">
+            Sudah punya akun? <Link to="/login">Masuk</Link>
           </p>
-
         </div>
       </div>
     </div>

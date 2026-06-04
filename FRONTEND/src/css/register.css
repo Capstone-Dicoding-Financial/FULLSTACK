@@ -158,6 +158,18 @@
   line-height: 1.6;
 }
 
+/* ── BANNER ERROR REGISTRASI ── */
+.reg-error-banner {
+  background: #fee2e2;
+  color: #ef4444;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  border: 1px solid #fca5a5;
+}
+
 /* ── FORM ── */
 .reg-form {
   display: flex;
@@ -275,7 +287,7 @@
   text-align: right;
 }
 
-/* ── Submit button — identical to login .btn-login ── */
+/* ── Submit button ── */
 .reg-submit-btn {
   width: 100%;
   padding: 14px;
@@ -296,13 +308,21 @@
   font-family: inherit;
 }
 
-.reg-submit-btn:hover {
+.reg-submit-btn:hover:not(:disabled) {
   background: #1e40af;
   box-shadow: 0 4px 16px rgba(30,58,138,0.3);
   transform: translateY(-1px);
 }
 
-.reg-submit-btn:active { transform: translateY(0); }
+.reg-submit-btn:active:not(:disabled) { 
+  transform: translateY(0); 
+}
+
+/* Efek tombol ketika loading (disabled) */
+.reg-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
 
 /* ── Footer ── */
 .reg-footer {
