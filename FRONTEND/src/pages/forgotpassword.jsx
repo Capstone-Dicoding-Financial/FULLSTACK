@@ -47,9 +47,6 @@ export default function ForgotPassword() {
         <div className="reg-left-bg"></div>
         
         <div className="reg-left-content">
-          <div className="reg-brand">
-            <div className="reg-brand-name">DanaUMKM</div>
-          </div>
           <h2 className="reg-left-title">
             Lupa Kata Sandi?
             <br />
