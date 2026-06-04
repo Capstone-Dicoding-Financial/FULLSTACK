@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import "../css/register.css"; 
+import "../css/forgotpassword.css"; 
 
 const MailIcon = () => (
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
@@ -42,6 +42,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="reg-page">
+      {/* BAGIAN KIRI */}
       <div className="reg-left">
         <div className="reg-left-bg"></div>
         
@@ -75,6 +76,7 @@ export default function ForgotPassword() {
         </div>
       </div>
 
+      {/* BAGIAN KANAN */}
       <div className="reg-right">
         <div className="reg-form-wrap">
           <h2 className="reg-title">Minta Tautan Reset</h2>
@@ -82,17 +84,8 @@ export default function ForgotPassword() {
             Kami akan mengirimkan link verifikasi perubahan kata sandi ke email Anda
           </p>
 
-          {error && (
-            <div className="reg-alert reg-alert-error">
-              {error}
-            </div>
-          )}
-
-          {message && (
-            <div className="reg-alert reg-alert-success">
-              {message}
-            </div>
-          )}
+          {error && <div className="reg-alert reg-alert-error">{error}</div>}
+          {message && <div className="reg-alert reg-alert-success">{message}</div>}
 
           <form onSubmit={handleSubmit} className="reg-form">
             <div className="reg-fgroup">
@@ -115,11 +108,7 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            <button 
-              type="submit" 
-              className="reg-submit-btn"
-              disabled={loading}
-            >
+            <button type="submit" className="reg-submit-btn" disabled={loading}>
               {loading ? "Mengirim Email..." : "Kirim Link Reset"}
             </button>
           </form>
