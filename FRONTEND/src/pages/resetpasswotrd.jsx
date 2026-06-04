@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import "../css/resetpassword.css"; 
+import "<div styleName={} />
+<css />
+<Resetp></Resetp>assword.css"; 
 
 const LockIcon = () => (
   <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
