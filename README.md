@@ -2,7 +2,7 @@
 
 Aplikasi *fullstack* berbasis web yang dirancang khusus untuk membantu pelaku Usaha Mikro, Kecil, dan Menengah (UMKM) dalam mencatat transaksi keuangan secara *real-time* sekaligus memprediksi arus kas (cashflow) masa depan menggunakan model *Deep Learning* (GRU - Gated Recurrent Unit).
 
-🌐 **Live Demo Frontend:** [https://fullstack-gcqi.vercel.app](https://fullstack-gcqi.vercel.app)
+🌐 **Live Demo Frontend:** [DanaUMKM](https://danaumkm.vercel.app/)
 
 ---
 
@@ -10,7 +10,7 @@ Aplikasi *fullstack* berbasis web yang dirancang khusus untuk membantu pelaku Us
 1. **Pencatatan Keuangan (CRUD):** Tambah, baca, dan hapus riwayat pemasukan serta pengeluaran usaha.
 2. **Laporan & Analisis:** Visualisasi grafik laba/rugi, rasio kesehatan keuangan (Profit Margin, Likuiditas), dan perhitungan otomatis.
 3. **AI Cashflow Forecast:** Prediksi saldo kas 30, 60, hingga 90 hari ke depan menggunakan model kecerdasan buatan (GRU).
-4. **AI Business Insights:** Rekomendasi tindakan otomatis berdasarkan tren keuangan bisnis.
+4. **AI Insights & Analysis:** Rekomendasi tindakan otomatis berdasarkan tren keuangan bisnis.
 5. **Ekspor PDF:** Unduh laporan keuangan dan hasil prediksi AI ke dalam format PDF yang rapi.
 6. **Autentikasi Aman:** Sistem Login/Register terenkripsi menggunakan JWT (JSON Web Tokens).
 
@@ -21,8 +21,7 @@ Proyek ini dibangun menggunakan arsitektur *microservices* dengan teknologi beri
 
 * **Frontend:** React.js (Vite), Custom CSS (Responsive), html2pdf.js.
 * **Backend (API):** Node.js, Express.js, Express Validator.
-* **Machine Learning / AI:** Python, FastAPI, TensorFlow/Keras (Hugging Face Spaces).
-* **Deployment:** Vercel (Frontend & Backend), Hugging Face (AI API).
+* **Deployment:** Vercel
 
 ---
 
