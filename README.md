@@ -38,3 +38,38 @@ Pastikan Anda sudah menginstal perangkat lunak berikut:
 ```bash
 git clone [https://github.com/Username-GitHub-Kamu/Nama-Repo-Kamu.git](https://github.com/Username-GitHub-Kamu/Nama-Repo-Kamu.git)
 cd Nama-Repo-Kamu
+```
+
+### 2. Setup Backend (Node.js & Express)
+```bash
+cd backend
+npm install
+```
+
+### 3. .ENV
+Buat file .env di dalam folder backend dengan isi:
+```bash
+PORT=5000
+DATABASE_URL="masukkan_url_database_anda"
+JWT_SECRET="masukkan_kunci_rahasia_jwt"
+PYTHON_AI_URL="[https://skys0o-umkm-cashflow-prediction.hf.space](https://skys0o-umkm-cashflow-prediction.hf.space)"
+```
+
+Jalankan server backend:
+```bash
+Npm run dev
+```
+### 4. Setup Frontend (React & Vite)
+```bash
+cd frontend
+npm install
+```
+### 5. Setup .env
+```bash
+VITE_EXPRESS_URL=http://localhost:5000
+VITE_FASTAPI_URL=[https://skys0o-umkm-cashflow-prediction.hf.space](https://skys0o-umkm-cashflow-prediction.hf.space)
+```
+Jalankan aplikasi frontend:
+```bash
+npm run dev
+```
